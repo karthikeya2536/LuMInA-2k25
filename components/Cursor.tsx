@@ -62,13 +62,6 @@ const Cursor: React.FC = () => {
         <div 
             ref={ringRef} 
             className={`cursor-ring ${isHovering ? 'hover' : ''}`}
-            style={{
-                zIndex: 9999,
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                pointerEvents: 'none',
-            }}
         ></div>
     );
 };
