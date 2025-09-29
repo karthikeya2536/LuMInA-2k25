@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import type { Page, Event, User, Registration, TeamMember } from './types';
 import { MOCK_EVENTS, MOCK_USER } from './data/mockData';
 import HomePage from './components/HomePage';
@@ -11,10 +12,10 @@ import GalleryPage from './components/GalleryPage';
 import ContactPage from './components/ContactPage';
 import ParticleBackground from './components/ParticleBackground';
 import Cursor from './components/Cursor';
+import Footer from './components/Footer';
 
 const App: React.FC = () => {
     const [appIsReady, setAppIsReady] = useState<boolean>(false);
-    const [currentPage, setCurrentPage] = useState<Page>('home');
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [currentUser] = useState<User>(MOCK_USER);
     const [registrations, setRegistrations] = useState<Registration[]>(() => {
@@ -22,7 +23,6 @@ const App: React.FC = () => {
             const saved = localStorage.getItem('lumina-fest-registrations');
             if (saved) {
                 const parsedRegistrations = JSON.parse(saved);
-                // Re-hydrate Date objects which are stringified by JSON.stringify
                 return parsedRegistrations.map((reg: any) => ({
                     ...reg,
                     event: {
@@ -40,7 +40,6 @@ const App: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
-    const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
     useEffect(() => {
         try {
@@ -61,36 +60,8 @@ const App: React.FC = () => {
       return <SplashScreen onFinished={() => setAppIsReady(true)} />;
     }
 
-    const handleNavigate = (page: Page) => {
-        if (isTransitioning || page === currentPage) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
-        setIsTransitioning(true); // Fades out page (300ms duration from class)
-
-        setTimeout(() => {
-            setCurrentPage(page);
-            window.scrollTo(0, 0);
-            setIsTransitioning(false); // Fades in new page (300ms duration from class)
-        }, 350); // Timeout should be slightly longer than fade-out duration
-    };
-
     const handleSelectEvent = (event: Event) => {
         setSelectedEvent(event);
-        handleNavigate('event_details');
-    };
-    
-    const handleGoToRegister = () => {
-        if (selectedEvent) {
-            handleNavigate('register');
-        }
-    };
-
-    const handleGoToDetails = () => {
-        if (selectedEvent) {
-            handleNavigate('event_details');
-        }
     };
 
     const handleRegistrationSubmit = (registrationData: { selectedPriceTier: string, teamMembers: TeamMember[] }) => {
@@ -98,14 +69,13 @@ const App: React.FC = () => {
 
         setIsLoading(true);
 
-        const newRegistration: Omit<Registration, 'id' | 'paymentId' | 'paymentStatus'> = {
+        const newRegistration: Omit<Registration, 'id', 'paymentId', 'paymentStatus'> = {
             event: selectedEvent,
             participant: currentUser,
             registrationDate: new Date(),
             ...registrationData
         };
 
-        // Simulate payment gateway processing
         setTimeout(() => {
             const finalRegistration: Registration = {
                 ...newRegistration,
@@ -116,52 +86,43 @@ const App: React.FC = () => {
             setRegistrations(prev => [...prev, finalRegistration]);
             setIsLoading(false);
             setShowSuccessMessage(true);
-            handleNavigate('home');
+            // After registration, navigate to home.
+            // This will be handled by the component using useNavigate
         }, 3000);
     };
 
-    const renderPage = () => {
-        switch (currentPage) {
-            case 'gallery':
-                return <GalleryPage onBack={() => handleNavigate('home')} />;
-            case 'contact':
-                return <ContactPage onBack={() => handleNavigate('home')} />;
-            case 'events':
-                return <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => handleNavigate('home')} />;
-            case 'event_details':
-                return selectedEvent ? <EventDetailsPage event={selectedEvent} onRegister={handleGoToRegister} onBack={() => handleNavigate('events')} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => handleNavigate('home')} />;
-            case 'register':
-                return selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={handleGoToDetails} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => handleNavigate('home')} />;
-            case 'home':
-            default:
-                return <HomePage onNavigateToEvents={() => handleNavigate('events')} />;
-        }
-    };
-
     return (
-        <div className="min-h-screen">
-            <Cursor />
-            <ParticleBackground />
-            <div className="relative z-10">
-                <Header onNavigate={handleNavigate} />
-                {isLoading && (
-                    <div className="fixed inset-0 bg-brand-bg/80 backdrop-blur-sm flex flex-col items-center justify-center z-[80]">
-                        <div className="w-16 h-16 border-4 border-t-brand-accent border-r-brand-accent border-brand-secondary rounded-full animate-spin"></div>
-                        <p className="mt-4 text-xl text-white">Processing Payment...</p>
-                    </div>
-                )}
-                {showSuccessMessage && (
-                     <div className="fixed top-24 right-6 bg-green-500/80 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg z-50 animate-fade-in-out">
-                        Registration Successful!
-                    </div>
-                )}
+        <Router>
+            <div className="min-h-screen">
+                <Cursor />
+                <ParticleBackground />
+                <div className="relative z-10">
+                    <Header />
+                    {isLoading && (
+                        <div className="fixed inset-0 bg-brand-bg/80 backdrop-blur-sm flex flex-col items-center justify-center z-[80]">
+                            <div className="w-16 h-16 border-4 border-t-brand-accent border-r-brand-accent border-brand-secondary rounded-full animate-spin"></div>
+                            <p className="mt-4 text-xl text-white">Processing Payment...</p>
+                        </div>
+                    )}
+                    {showSuccessMessage && (
+                         <div className="fixed top-24 right-6 bg-green-500/80 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg z-50 animate-fade-in-out">
+                            Registration Successful!
+                        </div>
+                    )}
 
-                <main className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-                  {renderPage()}
-                </main>
-            </div>
-
-             <style>{`
+                    <main>
+                        <Routes>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/events" element={<EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
+                            <Route path="/gallery" element={<GalleryPage onBack={() => {}} />} />
+                            <Route path="/contact" element={<ContactPage onBack={() => {}} />} />
+                            <Route path="/event/:eventId" element={selectedEvent ? <EventDetailsPage event={selectedEvent} onRegister={() => {}} onBack={() => {}} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
+                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => {}} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
+                        </Routes>
+                    </main>
+                    <Footer />
+                </div>
+                 <style>{`
                 /* --- Custom Cursor --- */
                 html, * {
                   cursor: none;
@@ -525,6 +486,7 @@ const App: React.FC = () => {
                 }
             `}</style>
         </div>
+        </Router>
     );
 };
 

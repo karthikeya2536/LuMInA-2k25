@@ -29,16 +29,13 @@ const ContactPage: React.FC<ContactPageProps> = ({ onBack }) => {
           <div>
             <h3 className="text-xl font-bold text-brand-accent">Event Coordinators</h3>
             <p className="text-brand-text mt-2">For general inquiries and support.</p>
-            <a href="mailto:contact@luminafest.com" className="text-brand-text-dark hover:text-brand-accent transition-colors">contact@luminafest.com</a>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-brand-accent">Sponsorship Team</h3>
-            <p className="text-brand-text mt-2">Interested in partnering with us?</p>
-            <a href="mailto:sponsors@luminafest.com" className="text-brand-text-dark hover:text-brand-accent transition-colors">sponsors@luminafest.com</a>
+            <a href="mailto:contact@luminafest.com" className="text-brand-text-dark hover:text-brand-accent transition-colors">lumina2k25@gmail.com</a>
+            <p className="text-brand-text-dark mt-2">Sushanth: +91 79935 72969</p>
+            <p className="text-brand-text-dark">Keerthi: +91 79930 66231</p>
           </div>
           <div>
             <h3 className="text-xl font-bold text-brand-accent">Venue</h3>
-            <p className="text-brand-text-dark mt-2">123 Tech Avenue, Innovation City, 54321</p>
+            <p className="text-brand-text-dark mt-2">St. Martin's Engineering College</p>
           </div>
         </div>
 

@@ -4,16 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "chmod +x node_modules/.bin/vite",
     "dev": "npx vite",
     "build": "npx vite build",
     "preview": "npx vite preview"
   },
   "dependencies": {
-
     "@supabase/supabase-js": "^2.58.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
