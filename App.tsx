@@ -173,7 +173,7 @@ const App: React.FC = () => {
                   border: 2px solid #F97316; /* brand-primary */
                   border-radius: 50%;
                   pointer-events: none;
-                  z-index: 9999;
+                  z-index: 10000;
                   transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
                 }
                 .cursor-ring::after {
