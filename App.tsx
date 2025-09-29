@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import type { Page, Event, User, Registration, TeamMember } from './types';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import type { Event, User, Registration, TeamMember } from './types';
 import { MOCK_EVENTS, MOCK_USER } from './data/mockData';
 import HomePage from './components/HomePage';
 import EventsPage from './components/EventsPage';
@@ -14,7 +14,8 @@ import ParticleBackground from './components/ParticleBackground';
 import Cursor from './components/Cursor';
 import Footer from './components/Footer';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+    const navigate = useNavigate();
     const [appIsReady, setAppIsReady] = useState<boolean>(false);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [currentUser] = useState<User>(MOCK_USER);
@@ -62,7 +63,13 @@ const App: React.FC = () => {
 
     const handleSelectEvent = (event: Event) => {
         setSelectedEvent(event);
+        navigate(`/event/${event.id}`);
     };
+
+    const handleNavigateToRegister = (event: Event) => {
+        setSelectedEvent(event);
+        navigate('/register');
+    }
 
     const handleRegistrationSubmit = (registrationData: { selectedPriceTier: string, teamMembers: TeamMember[] }) => {
         if (!selectedEvent || !currentUser) return;
@@ -86,13 +93,25 @@ const App: React.FC = () => {
             setRegistrations(prev => [...prev, finalRegistration]);
             setIsLoading(false);
             setShowSuccessMessage(true);
-            // After registration, navigate to home.
-            // This will be handled by the component using useNavigate
+            navigate('/'); // Navigate home after registration
         }, 3000);
     };
 
+    const EventDetailsWrapper = () => {
+        const { eventId } = useParams<{ eventId: string }>();
+        const event = MOCK_EVENTS.find(e => e.id.toString() === eventId);
+        if (!event) {
+            // Optional: Redirect to a 404 page or back to events list
+            useEffect(() => {
+                navigate('/events');
+            }, []);
+            return null;
+        }
+        return <EventDetailsPage event={event} onRegister={() => handleNavigateToRegister(event)} onBack={() => navigate('/events')} />;
+    };
+    
     return (
-        <Router>
+        <>
             <div className="min-h-screen">
                 <Cursor />
                 <ParticleBackground />
@@ -113,16 +132,17 @@ const App: React.FC = () => {
                     <main>
                         <Routes>
                             <Route path="/" element={<HomePage />} />
-                            <Route path="/events" element={<EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
-                            <Route path="/gallery" element={<GalleryPage onBack={() => {}} />} />
-                            <Route path="/contact" element={<ContactPage onBack={() => {}} />} />
-                            <Route path="/event/:eventId" element={selectedEvent ? <EventDetailsPage event={selectedEvent} onRegister={() => {}} onBack={() => {}} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
-                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => {}} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => {}} />} />
+                            <Route path="/events" element={<EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
+                            <Route path="/gallery" element={<GalleryPage onBack={() => navigate(-1)} />} />
+                            <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />
+                            <Route path="/event/:eventId" element={<EventDetailsWrapper />} />
+                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
                         </Routes>
                     </main>
                     <Footer />
                 </div>
-                 <style>{`
+            </div>
+            <style>{`
                 /* --- Custom Cursor --- */
                 html, * {
                   cursor: none;
@@ -485,9 +505,14 @@ const App: React.FC = () => {
                   animation: item-enter 0.5s ease-out forwards;
                 }
             `}</style>
-        </div>
-        </Router>
+        </>
     );
 };
+
+const App: React.FC = () => (
+    <Router>
+        <AppContent />
+    </Router>
+);
 
 export default App;

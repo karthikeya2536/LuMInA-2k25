@@ -40,7 +40,7 @@ const Header: React.FC = () => {
           <Link to="/gallery" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Gallery</Link>
           <Link to="/contact" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Contact</Link>
           <Link
-            to="/register"
+            to="/events"
             className="bg-[#F97316] text-white font-bold py-2 px-4 rounded-full hover:bg-[#FBBF24] transition-colors duration-300"
           >
             Register Now

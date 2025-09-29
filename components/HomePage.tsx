@@ -20,7 +20,7 @@ const HomePage: React.FC<HomePageProps> = () => {
           <p className="text-xl md:text-2xl text-brand-accent mt-4 font-mono animate-item-enter" style={{ animationDelay: '300ms' }}>October 17-18, 2025</p>
           <br />
           <Link
-            to="/register"
+            to="/events"
             className="hero-button px-8 py-4 bg-brand-primary text-white font-bold rounded-lg transition-all duration-300 transform hover:scale-105 animate-item-enter"
             style={{ animationDelay: '500ms' }}
           >
