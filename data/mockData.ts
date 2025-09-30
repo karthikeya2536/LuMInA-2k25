@@ -2,6 +2,20 @@ import type { Event, User } from '../types';
 
 export const MOCK_EVENTS: Event[] = [
   {
+    id: 8,
+    eventName: "Opening Ceremony",
+    description: "The grand inaugural ceremony to kick off LuMInA Fest 2k25 with guest speeches and performances.",
+    day: 1,
+    startTime: new Date("2025-10-17T10:00:00"),
+    endTime: new Date("2025-10-17T11:30:00"),
+    venue: "Seminar Hall",
+    category: "Cultural",
+    imageUrl: "https://picsum.photos/seed/inaugural/400/300",
+    requiresTeam: false,
+    pricingTiers: [],
+    scheduleOnly: true,
+  },
+  {
     id: 1,
     eventName: "TECHQUIT",
     description: "A Tech Quiz is an educational competition where students test and showcase their knowledge in various areas of technology such as computer science, electronics, software, hardware, and emerging technologies. The quiz encourages learning, critical thinking, and healthy competition among students, offering a platform to explore and deepen their understanding of the tech world.",
@@ -66,6 +80,20 @@ export const MOCK_EVENTS: Event[] = [
     requiresTeam: true,
     pricingTiers: ["Per Team (4 members): 200"],
   },
+   {
+    id: 9,
+    eventName: "TECHQUIT (Round 2)",
+    description: "The thrilling final round for the sharpest minds. Only the finalists from Round 1 compete for the top prize in this high-stakes tech quiz.",
+    day: 2,
+    startTime: new Date("2025-10-18T11:00:00"),
+    endTime: new Date("2025-10-18T12:30:00"),
+    venue: "CC Room",
+    category: "Technical",
+    imageUrl: "https://picsum.photos/seed/techquit2/400/300",
+    requiresTeam: true,
+    pricingTiers: [],
+    scheduleOnly: true,
+  },
   {
     id: 7,
     eventName: "RANGASTALAM",
@@ -86,6 +114,20 @@ export const MOCK_EVENTS: Event[] = [
       "Theme Walk (Per Person): 50",
       "Audience Pass: 60",
     ],
+  },
+  {
+    id: 10,
+    eventName: "Closing Ceremony",
+    description: "Concluding the fest with prize distributions for all event winners and closing remarks. A final celebration of talent and innovation.",
+    day: 2,
+    startTime: new Date("2025-10-18T15:30:00"),
+    endTime: new Date("2025-10-18T15:50:00"),
+    venue: "Rabindranath Tagore Auditorium",
+    category: "Cultural",
+    imageUrl: "https://picsum.photos/seed/closing/400/300",
+    requiresTeam: false,
+    pricingTiers: [],
+    scheduleOnly: true,
   },
 ];
 

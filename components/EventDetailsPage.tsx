@@ -43,19 +43,21 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({ event, onRegister, 
           <div className="animate-item-enter" style={{ animationDelay: '500ms' }}>
             <p className="text-sm font-bold text-brand-accent uppercase mb-2">Pricing Tiers</p>
             <ul className="list-disc list-inside text-lg text-brand-text">
-              {event.pricingTiers.map((tier, index) => (
+              {event.pricingTiers.length > 0 ? event.pricingTiers.map((tier, index) => (
                 <li key={index}>{tier}</li>
-              ))}
+              )) : <li>Not applicable</li>}
             </ul>
           </div>
 
-          <button
-            onClick={onRegister}
-            className="mt-10 w-full px-8 py-4 bg-brand-primary text-white font-bold rounded-lg shadow-lg hover:bg-brand-accent hover:text-brand-bg transition-all duration-300 transform hover:scale-105 animate-item-enter"
-            style={{ animationDelay: '600ms' }}
-          >
-            Register for this Event
-          </button>
+          {!event.scheduleOnly && (
+            <button
+              onClick={onRegister}
+              className="mt-10 w-full px-8 py-4 bg-brand-primary text-white font-bold rounded-lg shadow-lg hover:bg-brand-accent hover:text-brand-bg transition-all duration-300 transform hover:scale-105 animate-item-enter"
+              style={{ animationDelay: '600ms' }}
+            >
+              Register for this Event
+            </button>
+          )}
         </div>
       </div>
     </div>

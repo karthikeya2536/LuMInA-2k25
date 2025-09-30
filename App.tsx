@@ -14,6 +14,7 @@ import ParticleBackground from './components/ParticleBackground';
 import Cursor from './components/Cursor';
 import Footer from './components/Footer';
 import ConfirmationPage from './components/ConfirmationPage';
+import SchedulePage from './components/SchedulePage';
 
 const AppContent: React.FC = () => {
     const navigate = useNavigate();
@@ -71,6 +72,9 @@ const AppContent: React.FC = () => {
                 break;
             case 'events':
                 navigate('/events');
+                break;
+            case 'schedule':
+                navigate('/schedule');
                 break;
             case 'gallery':
                 navigate('/gallery');
@@ -150,6 +154,7 @@ const AppContent: React.FC = () => {
                         <Routes>
                             <Route path="/" element={<HomePage onNavigateToEvents={handleNavigateToEvents} />} />
                             <Route path="/events" element={<EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
+                            <Route path="/schedule" element={<SchedulePage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate(-1)} />} />
                             <Route path="/gallery" element={<GalleryPage onBack={() => navigate(-1)} />} />
                             <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />
                             <Route path="/event/:eventId" element={<EventDetailsWrapper />} />

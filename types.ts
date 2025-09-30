@@ -11,6 +11,7 @@ export interface Event {
   imageUrl: string;
   requiresTeam: boolean;
   pricingTiers: string[];
+  scheduleOnly?: boolean;
 }
 
 export interface User {
@@ -41,4 +42,4 @@ export interface Registration {
   paymentId: string | null;
 }
 
-export type Page = 'home' | 'events' | 'event_details' | 'register' | 'dashboard' | 'gallery' | 'contact';
+export type Page = 'home' | 'events' | 'event_details' | 'register' | 'dashboard' | 'gallery' | 'contact' | 'schedule';

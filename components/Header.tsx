@@ -28,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         <nav className="hidden md:flex items-center space-x-4">
           <NavLink page="home">Home</NavLink>
           <NavLink page="events">Events</NavLink>
+          <NavLink page="schedule">Schedule</NavLink>
           <NavLink page="gallery">Gallery</NavLink>
           <NavLink page="contact">Contact Us</NavLink>
         </nav>
