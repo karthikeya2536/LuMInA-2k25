@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import type { Event, User, Registration, TeamMember, Page } from './types';
 import { MOCK_EVENTS, MOCK_USER } from './data/mockData';
 import HomePage from './components/HomePage';
@@ -13,9 +13,11 @@ import ContactPage from './components/ContactPage';
 import ParticleBackground from './components/ParticleBackground';
 import Cursor from './components/Cursor';
 import Footer from './components/Footer';
+import ConfirmationPage from './components/ConfirmationPage';
 
 const AppContent: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [appIsReady, setAppIsReady] = useState<boolean>(false);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [currentUser] = useState<User>(MOCK_USER);
@@ -40,7 +42,10 @@ const AppContent: React.FC = () => {
         return [];
     });
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location.pathname]);
 
     useEffect(() => {
         try {
@@ -49,13 +54,6 @@ const AppContent: React.FC = () => {
             console.error('Could not save registrations to local storage', e);
         }
     }, [registrations]);
-
-    useEffect(() => {
-        if (showSuccessMessage) {
-            const timer = setTimeout(() => setShowSuccessMessage(false), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [showSuccessMessage]);
 
     if (!appIsReady) {
       return <SplashScreen onFinished={() => setAppIsReady(true)} />;
@@ -117,8 +115,7 @@ const AppContent: React.FC = () => {
             };
             setRegistrations(prev => [...prev, finalRegistration]);
             setIsLoading(false);
-            setShowSuccessMessage(true);
-            navigate('/'); // Navigate home after registration
+            navigate('/confirmation', { state: { registration: finalRegistration } });
         }, 3000);
     };
 
@@ -148,11 +145,6 @@ const AppContent: React.FC = () => {
                             <p className="mt-4 text-xl text-white">Processing Payment...</p>
                         </div>
                     )}
-                    {showSuccessMessage && (
-                         <div className="fixed top-24 right-6 bg-green-500/80 backdrop-blur-sm text-white p-4 rounded-lg shadow-lg z-50 animate-fade-in-out">
-                            Registration Successful!
-                        </div>
-                    )}
 
                     <main className="flex-grow">
                         <Routes>
@@ -162,6 +154,7 @@ const AppContent: React.FC = () => {
                             <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />
                             <Route path="/event/:eventId" element={<EventDetailsWrapper />} />
                             <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
+                            <Route path="/confirmation" element={<ConfirmationPage onNavigateToEvents={handleNavigateToEvents} onNavigateHome={() => navigate('/')} />} />
                         </Routes>
                     </main>
                     <Footer />
@@ -305,68 +298,36 @@ const AppContent: React.FC = () => {
                   margin-bottom: 2rem;
                 }
                 .form-input {
+                    display: block;
                     width: 100%;
+                    box-sizing: border-box;
                     background-color: rgba(13, 17, 23, 0.55);
                     border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
                     border-radius: 0.5rem; /* rounded-lg */
                     padding: 1rem;
                     color: #E6EDF3; /* text-brand-text */
                     transition: all 0.12s ease-in-out;
-                    caret-color: #FBBF24;
                     font-size: 1rem;
                 }
-                /* Filled state: make inner background slightly lighter and text brighter */
-                input.form-input[data-empty="false"],
-                textarea.form-input[data-empty="false"],
-                .select-button:not(.placeholder) {
-                    /* keep the same inner background as empty state to avoid visual shift */
-                    background-color: rgba(13,17,23,0.55) !important;
-                    color: #E6EDF3 !important;
-                    border-color: rgba(251,191,36,1) !important;
-                    box-shadow: none;
-                }
-                /* Ensure the filled select button value is visible */
-                .select-button:not(.placeholder) .select-button-value {
-                    color: #E6EDF3;
-                }
-                /* Hide any placeholder text inside the select button when empty */
-                .select-button.placeholder .select-button-value {
-                    color: transparent;
-                }
-                /* Smooth transitions for fill state */
-                .form-input, .select-button {
-                    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-                }
-                /* --- Neutralize browser autofill styling (Chrome/Safari/Edge and Firefox) --- */
-                input.form-input:-webkit-autofill,
-                textarea.form-input:-webkit-autofill,
-                input.form-input:-webkit-autofill:focus,
-                textarea.form-input:-webkit-autofill:focus {
-                    -webkit-box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                    -webkit-text-fill-color: #E6EDF3 !important;
-                    transition: background-color 5000s ease-in-out 0s !important;
-                }
-                input.form-input:-moz-autofill,
-                textarea.form-input:-moz-autofill {
-                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                    -moz-text-fill-color: #E6EDF3 !important;
+                input.form-input {
+                  height: 3.5rem;
+                  caret-color: #FBBF24;
                 }
                 .form-label {
                     position: absolute;
                     left: 1rem;
                     top: 1rem;
-                    color: #FBBF24; /* label stays yellow on the border */
+                    color: #8B949E; /* default label color */
                     pointer-events: none;
                     transition: all 0.12s ease-in-out;
-                    background-color: #0d1117; /* match page background so label sits cleanly */
-                    font-weight: 600;
-                    font-size: 0.95rem;
+                    background-color: transparent;
+                    font-weight: 500;
+                    font-size: 1rem;
                     padding: 0 0.5rem;
-                    z-index: 30; /* ensure label floats above field text */
-                    display: inline-block;
+                    z-index: 1;
                 }
-                /* Apply focus/filled styles to inputs and textareas only (not selects) */
+
+                /* Focus/filled styles for text inputs */
                 input.form-input:focus,
                 textarea.form-input:focus,
                 input.form-input:not(:placeholder-shown),
@@ -383,17 +344,67 @@ const AppContent: React.FC = () => {
                 textarea.form-input[data-empty="false"] + .form-label {
                     top: -0.6rem;
                     left: 0.9rem;
-                    font-size: 0.8rem; /* slightly smaller */
-                    color: #FBBF24; /* label remains yellow */
+                    font-size: 0.8rem;
+                    color: #FBBF24;
                     padding: 0 0.35rem;
-                    background-color: #0d1117; /* match page background so label appears cut out of border */
+                    background-color: #0d1117; /* match page background */
+                    z-index: 10;
                 }
-
-                /* Selects: style the wrapper instead of the select itself to avoid double borders */
+                
+                /* --- Custom Select Styles --- */
+                .select-wrapper {
+                  position: relative;
+                  display: flex;
+                  align-items: center;
+                  height: 3.5rem;
+                  border-radius: 0.5rem; /* rounded-lg */
+                  transition: all 0.12s ease-in-out;
+                  border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
+                  background-color: rgba(13, 17, 23, 0.55);
+                  box-sizing: border-box; /* FIX: Ensures total height matches inputs */
+                }
+                .select-button {
+                  width: 100%;
+                  height: 100%;
+                  display: flex;
+                  align-items: center;
+                  background-color: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  padding: 1rem;
+                  text-align: left;
+                  color: #E6EDF3;
+                  font-size: 1rem;
+                  position: relative;
+                  cursor: pointer;
+                }
+                .select-button::after {
+                  content: '';
+                  position: absolute;
+                  right: 1rem;
+                  top: 50%;
+                  transform: translateY(-50%) rotate(45deg);
+                  width: 0.5rem;
+                  height: 0.5rem;
+                  border: solid #8B949E;
+                  border-width: 0 2px 2px 0;
+                  transition: transform 0.2s ease, border-color 0.2s ease;
+                }
+                .select-wrapper:focus-within .select-button::after,
+                .select-button[aria-expanded="true"]::after {
+                  border-color: #FBBF24;
+                }
+                .select-button[aria-expanded="true"]::after {
+                  transform: translateY(-25%) rotate(225deg);
+                }
+                .select-button.placeholder .select-button-value {
+                  color: transparent;
+                }
                 .select-wrapper:focus-within,
                 .select-wrapper[data-empty="false"] {
-                    border-color: rgba(251,191,36,1);
-                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.06);
+                  border-color: rgba(251,191,36,1);
+                  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.08);
+                  outline: none;
                 }
                 .select-wrapper:focus-within .form-label,
                 .select-wrapper[data-empty="false"] .form-label {
@@ -403,13 +414,44 @@ const AppContent: React.FC = () => {
                     color: #FBBF24;
                     padding: 0 0.35rem;
                     background-color: #0d1117;
+                    z-index: 10;
                 }
+                .select-dropdown {
+                  position: absolute;
+                  top: calc(100% + 0.5rem);
+                  left: 0;
+                  right: 0;
+                  background-color: #161B22; /* brand-secondary */
+                  border: 1px solid rgba(251,191,36,0.65);
+                  border-radius: 0.5rem;
+                  padding: 0.5rem;
+                  z-index: 20;
+                  max-height: 200px;
+                  overflow-y: auto;
+                  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+                }
+                .select-option {
+                  padding: 0.75rem 1rem;
+                  color: #E6EDF3;
+                  cursor: pointer;
+                  border-radius: 0.375rem;
+                  transition: background-color 0.15s ease;
+                }
+                .select-option:hover {
+                  background-color: rgba(251, 191, 36, 0.1);
+                  color: #FBBF24;
+                }
+                .select-option.selected {
+                  background-color: rgba(249, 115, 22, 0.2);
+                  color: #F97316;
+                  font-weight: 600;
+                }
+
             `}</style>
         </>
     );
 };
 
-// FIX: Added the main App component to provide the Router context and a default export.
 const App: React.FC = () => (
     <Router>
         <AppContent />

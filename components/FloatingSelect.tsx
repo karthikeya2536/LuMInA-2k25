@@ -47,15 +47,14 @@ const FloatingSelect: React.FC<FloatingSelectProps> = ({ id, name, label, value,
 
   return (
     <div className="form-group" ref={wrapperRef}>
-      <div className="select-wrapper" data-empty={isEmpty}>
+      <div className={`select-wrapper`} data-empty={isEmpty}>
         <button
           type="button"
           id={id}
-          className={`form-input select-button ${isEmpty ? 'placeholder' : ''}`}
+          className={`select-button ${isEmpty ? 'placeholder' : ''}`}
           onClick={() => setIsOpen(!isOpen)}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          data-empty={isEmpty}
         >
          <span className="select-button-value">{selectedOption?.label || ''}</span>
         </button>

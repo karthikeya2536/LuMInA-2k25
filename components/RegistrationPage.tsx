@@ -97,7 +97,8 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
   // --- Unified Change Handler ---
   const handleTeamMemberChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value: rawValue } = e.target;
-    const value = name === 'rollNo' ? rawValue.toUpperCase() : rawValue;
+    // Uppercase full name and roll number as user types for consistent data format
+    const value = (name === 'rollNo' || name === 'fullName') ? rawValue.toUpperCase() : rawValue;
     setTeamMembers(prev => {
         const updatedMembers = [...prev];
         updatedMembers[index] = { ...updatedMembers[index], [name]: value };
@@ -109,28 +110,57 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
   const isTacticalShowdown = event.eventName === 'TACTICAL SHOWDOWN';
   const isLogicalLeague = event.eventName === 'LOGICAL LEAGUE';
   const isRangasthalam = event.eventName === 'RANGASTALAM';
+  const hasEventOptions = isRangasthalam || isDebate || isTacticalShowdown || isLogicalLeague;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const primaryParticipant = teamMembers[0];
-    if (!primaryParticipant || !primaryParticipant.fullName || !primaryParticipant.rollNo) {
-        setSubmitError('Primary participant Full Name and Roll No. are required.');
-        setIsSubmitting(false);
-        return;
-    }
-    
+    // --- Form Validation ---
+    const validationErrors: string[] = [];
+    // Regex for valid roll number prefixes (e.g., 22K81A, 25K85A)
+    const rollNoRegex = /^(2[2-5]K8[15]A).{4}$/;
+
+    teamMembers.forEach((member, index) => {
+        const memberNum = index + 1;
+        
+        if (!member.fullName.trim()) {
+            validationErrors.push(`Member ${memberNum}: Full Name is required.`);
+        }
+        
+        if (!member.rollNo.trim()) {
+            validationErrors.push(`Member ${memberNum}: Roll No. is required.`);
+        } else {
+            if (member.rollNo.length !== 10) {
+                validationErrors.push(`Member ${memberNum}: Roll No. must be exactly 10 characters long.`);
+            } else if (!rollNoRegex.test(member.rollNo)) {
+                validationErrors.push(`Member ${memberNum}: Roll No. has an invalid format. Must start with a valid prefix (e.g., 22K81A) and be 10 characters.`);
+            }
+        }
+        
+        // Validate phone number (10 digits) only for the primary participant
+        if (index === 0) {
+            if (!member.phoneNumber || !/^\d{10}$/.test(member.phoneNumber)) {
+                validationErrors.push(`Primary Participant: Phone number must be exactly 10 digits.`);
+            }
+        }
+    });
+
     // Additional validation for Rangasthalam >5 group
     if (event.eventName === 'RANGASTALAM' && rangasthalamTier.includes('Group >5')) {
       const size = parseInt(groupSizeOver5, 10);
       if (isNaN(size) || size < 6) {
-        setSubmitError('For a group size greater than 5, you must enter a number of 6 or more.');
-        setIsSubmitting(false);
-        return;
+        validationErrors.push('For "Group >5", you must enter a number of 6 or more.');
       }
     }
+    
+    if (validationErrors.length > 0) {
+        setSubmitError(validationErrors.join('\n'));
+        setIsSubmitting(false);
+        return;
+    }
+    // --- End Validation ---
 
     const googleFormActionURL = 'https://docs.google.com/forms/d/e/1FAIpQLSejMRTIGWD_tpJOsOC1UWYs3W7-F3vINXZIljI14ZTxUHl3Cg/formResponse';
     const googleFormData = new FormData();
@@ -138,6 +168,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
     googleFormData.append('entry.1721128365', event.eventName);
     
     // Add primary participant details
+    const primaryParticipant = teamMembers[0];
     googleFormData.append('entry.1994438372', primaryParticipant.fullName);
     googleFormData.append('entry.632548788', primaryParticipant.phoneNumber || '');
     googleFormData.append('entry.1235040660', primaryParticipant.rollNo);
@@ -199,12 +230,12 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
             </div>
             {memberNumber === 1 && (
                 <div className="form-group">
-                    <input type="tel" id="phoneNumber" name="phoneNumber" value={memberData.phoneNumber} onChange={handler} className="form-input" placeholder=" " required />
+                    <input type="tel" id="phoneNumber" name="phoneNumber" value={memberData.phoneNumber} onChange={handler} className="form-input" placeholder=" " required maxLength={10} />
                     <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
                 </div>
             )}
             <div className="form-group">
-                <input type="text" id={`m${memberNumber}_rollNo`} name="rollNo" value={memberData.rollNo} onChange={handler} className="form-input" placeholder=" " required />
+                <input type="text" id={`m${memberNumber}_rollNo`} name="rollNo" value={memberData.rollNo} onChange={handler} className="form-input" placeholder=" " required maxLength={10} />
                 <label htmlFor={`m${memberNumber}_rollNo`} className="form-label">Roll No.</label>
             </div>
             <div className="form-group">
@@ -231,75 +262,79 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto mt-12 space-y-10">
-        <div className="bg-brand-secondary/30 p-8 rounded-xl shadow-lg border border-brand-secondary">
-            <h2 className="text-2xl font-bold mb-8 text-white border-b border-brand-primary/50 pb-4">1. Event Options</h2>
-            
-            {isRangasthalam && (
-              <>
-                <div className="form-group">
-                    <FloatingSelect
-                        label="Select your category"
-                        id="rangasthalamTier"
-                        name="rangasthalamTier"
+        {hasEventOptions && (
+          <div className="bg-brand-secondary/30 p-8 rounded-xl shadow-lg border border-brand-secondary">
+              <h2 className="text-2xl font-bold mb-8 text-white border-b border-brand-primary/50 pb-4">1. Event Options</h2>
+              
+              {isRangasthalam && (
+                <>
+                  <div className="form-group">
+                      <FloatingSelect
+                          label="Select your category"
+                          id="rangasthalamTier"
+                          name="rangasthalamTier"
+                          required
+                          value={rangasthalamTier}
+                          onChange={(e) => setRangasthalamTier(e.target.value)}
+                          options={rangasthalamOptions}
+                      />
+                  </div>
+                  {rangasthalamTier.includes('Group 3-5') && (
+                    <div className="form-group">
+                      <FloatingSelect
+                        label="Select Group Size"
+                        id="groupSize3to5"
+                        name="groupSize3to5"
                         required
-                        value={rangasthalamTier}
-                        onChange={(e) => setRangasthalamTier(e.target.value)}
-                        options={rangasthalamOptions}
-                    />
-                </div>
-                {rangasthalamTier.includes('Group 3-5') && (
-                  <div className="form-group">
-                    <FloatingSelect
-                      label="Select Group Size"
-                      id="groupSize3to5"
-                      name="groupSize3to5"
-                      required
-                      value={groupSize3to5}
-                      onChange={(e) => setGroupSize3to5(e.target.value)}
-                      options={[
-                        { value: '3', label: '3 Members' },
-                        { value: '4', label: '4 Members' },
-                        { value: '5', label: '5 Members' },
-                      ]}
-                    />
-                  </div>
-                )}
-                {rangasthalamTier.includes('Group >5') && (
-                  <div className="form-group">
-                    <input
-                      type="number"
-                      id="groupSizeOver5"
-                      name="groupSizeOver5"
-                      value={groupSizeOver5}
-                      onChange={(e) => setGroupSizeOver5(e.target.value)}
-                      className="form-input"
-                      placeholder=" "
-                      required
-                      min="6"
-                    />
-                    <label htmlFor="groupSizeOver5" className="form-label">Enter Number of Members (6+)</label>
-                  </div>
-                )}
-              </>
-            )}
+                        value={groupSize3to5}
+                        onChange={(e) => setGroupSize3to5(e.target.value)}
+                        options={[
+                          { value: '3', label: '3 Members' },
+                          { value: '4', label: '4 Members' },
+                          { value: '5', label: '5 Members' },
+                        ]}
+                      />
+                    </div>
+                  )}
+                  {rangasthalamTier.includes('Group >5') && (
+                    <div className="form-group">
+                      <input
+                        type="number"
+                        id="groupSizeOver5"
+                        name="groupSizeOver5"
+                        value={groupSizeOver5}
+                        onChange={(e) => setGroupSizeOver5(e.target.value)}
+                        className="form-input"
+                        placeholder=" "
+                        required
+                        min="6"
+                      />
+                      <label htmlFor="groupSizeOver5" className="form-label">Enter Number of Members (6+)</label>
+                    </div>
+                  )}
+                </>
+              )}
 
-            {(isDebate || isTacticalShowdown || isLogicalLeague) && (
-                <div className="form-group">
-                    <input type="text" id="teamName" name="teamName" value={teamName} onChange={(e) => setTeamName(e.target.value)} className="form-input" placeholder=" " required />
-                    <label htmlFor="teamName" className="form-label">Team Name</label>
-                </div>
-            )}
+              {(isDebate || isTacticalShowdown || isLogicalLeague) && (
+                  <div className="form-group">
+                      <input type="text" id="teamName" name="teamName" value={teamName} onChange={(e) => setTeamName(e.target.value)} className="form-input" placeholder=" " required />
+                      <label htmlFor="teamName" className="form-label">Team Name</label>
+                  </div>
+              )}
 
-            {isTacticalShowdown && (
-                <div className="form-group">
-                    <FloatingSelect label="Team Size" id="teamSize" name="teamSize" required value={tacticalShowdownTeamSize.toString()} onChange={(e) => setTacticalShowdownTeamSize(parseInt(e.target.value, 10))}
-                        options={[{value: '1', label: '1'}, {value: '2', label: '2'}, {value: '3', label: '3'}, {value: '4', label: '4'}]} />
-                </div>
-            )}
-        </div>
+              {isTacticalShowdown && (
+                  <div className="form-group">
+                      <FloatingSelect label="Team Size" id="teamSize" name="teamSize" required value={tacticalShowdownTeamSize.toString()} onChange={(e) => setTacticalShowdownTeamSize(parseInt(e.target.value, 10))}
+                          options={[{value: '1', label: '1'}, {value: '2', label: '2'}, {value: '3', label: '3'}, {value: '4', label: '4'}]} />
+                  </div>
+              )}
+          </div>
+        )}
 
         <div className="bg-brand-secondary/30 p-8 rounded-xl shadow-lg border border-brand-secondary">
-          <h2 className="text-2xl font-bold mb-8 text-white border-b border-brand-primary/50 pb-4">2. Participant Details</h2>
+          <h2 className="text-2xl font-bold mb-8 text-white border-b border-brand-primary/50 pb-4">
+            {hasEventOptions ? '2. Participant Details' : '1. Participant Details'}
+          </h2>
           {teamMembers.map((member, index) => (
             <div key={index}>
               {renderMemberFields(member, (e) => handleTeamMemberChange(index, e), index + 1)}
