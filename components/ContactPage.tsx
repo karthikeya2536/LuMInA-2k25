@@ -29,9 +29,13 @@ const ContactPage: React.FC<ContactPageProps> = ({ onBack }) => {
           <div>
             <h3 className="text-xl font-bold text-brand-accent">Event Coordinators</h3>
             <p className="text-brand-text mt-2">For general inquiries and support.</p>
-            <a href="mailto:contact@luminafest.com" className="text-brand-text-dark hover:text-brand-accent transition-colors">lumina2k25@gmail.com</a>
-            <p className="text-brand-text-dark mt-2">Sushanth: +91 79935 72969</p>
-            <p className="text-brand-text-dark">Keerthi: +91 79930 66231</p>
+            <a href="mailto:lumina2k25@gmail.com" className="text-brand-text-dark hover:text-brand-accent transition-colors">lumina2k25@gmail.com</a>
+            <p className="text-brand-text-dark mt-2">
+              <a href="tel:+917993572969" className="hover:text-brand-accent transition-colors">Sushanth: +91 79935 72969</a>
+            </p>
+            <p className="text-brand-text-dark">
+              <a href="tel:+917993066231" className="hover:text-brand-accent transition-colors">Keerthi: +91 79930 66231</a>
+            </p>
           </div>
           <div>
             <h3 className="text-xl font-bold text-brand-accent">Venue</h3>

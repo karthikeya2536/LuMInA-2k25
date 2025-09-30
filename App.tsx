@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import type { Event, User, Registration, TeamMember } from './types';
+import { HashRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import type { Event, User, Registration, TeamMember, Page } from './types';
 import { MOCK_EVENTS, MOCK_USER } from './data/mockData';
 import HomePage from './components/HomePage';
 import EventsPage from './components/EventsPage';
@@ -66,6 +66,29 @@ const AppContent: React.FC = () => {
         navigate(`/event/${event.id}`);
     };
 
+    const handleNavigation = (page: Page) => {
+        switch (page) {
+            case 'home':
+                navigate('/');
+                break;
+            case 'events':
+                navigate('/events');
+                break;
+            case 'gallery':
+                navigate('/gallery');
+                break;
+            case 'contact':
+                navigate('/contact');
+                break;
+            default:
+                navigate('/');
+        }
+    };
+    
+    const handleNavigateToEvents = () => {
+        navigate('/events');
+    };
+
     const handleNavigateToRegister = (event: Event) => {
         setSelectedEvent(event);
         navigate('/register');
@@ -76,7 +99,9 @@ const AppContent: React.FC = () => {
 
         setIsLoading(true);
 
-        const newRegistration: Omit<Registration, 'id', 'paymentId', 'paymentStatus'> = {
+        // FIX: The `Omit` utility type requires two arguments: the base type and the keys to omit.
+        // Here, we're creating a partial registration object before the payment details (like id, paymentId, paymentStatus) are generated.
+        const newRegistration: Omit<Registration, 'id' | 'paymentId' | 'paymentStatus'> = {
             event: selectedEvent,
             participant: currentUser,
             registrationDate: new Date(),
@@ -115,8 +140,8 @@ const AppContent: React.FC = () => {
             <div className="min-h-screen">
                 <Cursor />
                 <ParticleBackground />
-                <div className="relative z-10">
-                    <Header />
+                <div className="relative z-10 flex flex-col min-h-screen">
+                    <Header onNavigate={handleNavigation} />
                     {isLoading && (
                         <div className="fixed inset-0 bg-brand-bg/80 backdrop-blur-sm flex flex-col items-center justify-center z-[80]">
                             <div className="w-16 h-16 border-4 border-t-brand-accent border-r-brand-accent border-brand-secondary rounded-full animate-spin"></div>
@@ -129,9 +154,9 @@ const AppContent: React.FC = () => {
                         </div>
                     )}
 
-                    <main>
+                    <main className="flex-grow">
                         <Routes>
-                            <Route path="/" element={<HomePage />} />
+                            <Route path="/" element={<HomePage onNavigateToEvents={handleNavigateToEvents} />} />
                             <Route path="/events" element={<EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
                             <Route path="/gallery" element={<GalleryPage onBack={() => navigate(-1)} />} />
                             <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />

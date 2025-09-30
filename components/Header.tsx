@@ -1,50 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import type { Page } from '../types';
 
-const Header: React.FC = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
+interface HeaderProps {
+  onNavigate: (page: Page) => void;
+}
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset;
-      if (scrollTop > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
+const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+  const NavLink: React.FC<{ page: Page; children: React.ReactNode }> = ({ page, children }) => (
+    <button 
+      onClick={() => onNavigate(page)} 
+      className="text-brand-text hover:text-brand-accent transition-colors duration-300 px-3 py-2"
+    >
+      {children}
+    </button>
+  );
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-[#0d1117] shadow-lg' : 'bg-transparent'
-      }`}
-    >
+    <header className="bg-brand-secondary/50 backdrop-blur-sm sticky top-0 z-50 shadow-lg shadow-brand-primary/20">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <Link
-          to="/"
-          className="text-3xl font-bold text-white cursor-pointer hover:text-[#FBBF24] transition-colors duration-300"
+        <button 
+          className="text-3xl font-bold text-white cursor-pointer hover:text-brand-accent transition-colors duration-300"
+          onClick={() => onNavigate('home')}
         >
-          Lumina Fest
-        </Link>
-        <nav className="hidden md:flex items-center space-x-2">
-          <Link to="/" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Home</Link>
-          <Link to="/events" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Events</Link>
-          <Link to="/gallery" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Gallery</Link>
-          <Link to="/contact" className="text-white hover:text-[#FBBF24] transition-colors duration-300 px-3 py-2">Contact</Link>
-          <Link
-            to="/events"
-            className="bg-[#F97316] text-white font-bold py-2 px-4 rounded-full hover:bg-[#FBBF24] transition-colors duration-300"
-          >
-            Register Now
-          </Link>
+          LuMInA 2k25
+        </button>
+        <nav className="hidden md:flex items-center space-x-4">
+          <NavLink page="home">Home</NavLink>
+          <NavLink page="events">Events</NavLink>
+          <NavLink page="gallery">Gallery</NavLink>
+          <NavLink page="contact">Contact Us</NavLink>
         </nav>
       </div>
     </header>

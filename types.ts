@@ -1,3 +1,4 @@
+
 export interface Event {
   id: number;
   eventName: string;
@@ -23,9 +24,10 @@ export interface User {
 export interface TeamMember {
   fullName: string;
   year?: string;
-  branch?: string;
+  department?: string;
   section?: string;
   rollNo?: string;
+  phoneNumber?: string;
 }
 
 export interface Registration {
@@ -39,4 +41,4 @@ export interface Registration {
   paymentId: string | null;
 }
 
-export type Page = 'home' | 'events' | 'event_details' | 'register' | 'gallery' | 'contact';
+export type Page = 'home' | 'events' | 'event_details' | 'register' | 'dashboard' | 'gallery' | 'contact';
