@@ -129,7 +129,7 @@ const AppContent: React.FC = () => {
             // Optional: Redirect to a 404 page or back to events list
             useEffect(() => {
                 navigate('/events');
-            }, []);
+            }, [navigate]);
             return null;
         }
         return <EventDetailsPage event={event} onRegister={() => handleNavigateToRegister(event)} onBack={() => navigate('/events')} />;
@@ -168,37 +168,28 @@ const AppContent: React.FC = () => {
                 </div>
             </div>
             <style>{`
-                /* --- Custom Cursor --- */
+                /* --- Custom Cursor (Glowing Orb) --- */
                 html, * {
                   cursor: none !important;
                 }
-                .cursor-ring {
+                .cursor-orb {
                   position: fixed;
-                  width: 40px;
-                  height: 40px;
-                  border: 2px solid #F97316; /* brand-primary */
+                  width: 24px;
+                  height: 24px;
+                  background-color: rgba(251, 191, 36, 0.7); /* brand-accent */
                   border-radius: 50%;
                   pointer-events: none;
                   z-index: 10000;
-                  transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+                  box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4);
+                  /* Smooth transitions for all properties */
+                  transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
                 }
-                .cursor-ring::after {
-                  content: '';
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: 8px;
-                  height: 8px;
-                  background-color: #FBBF24; /* brand-accent */
-                  border-radius: 50%;
-                  mix-blend-mode: difference;
-                }
-                .cursor-ring.hover {
-                  width: 60px;
-                  height: 60px;
-                  background-color: rgba(251, 191, 36, 0.2);
-                  border-color: #FBBF24; /* brand-accent */
+
+                .cursor-orb.hover {
+                  width: 36px; /* Grow the orb */
+                  height: 36px;
+                  background-color: rgba(251, 191, 36, 0.9);
+                  box-shadow: 0 0 35px 10px rgba(251, 191, 36, 0.6);
                 }
 
                 /* --- Reveal on Scroll --- */
@@ -313,227 +304,112 @@ const AppContent: React.FC = () => {
                   position: relative;
                   margin-bottom: 2rem;
                 }
-                                .form-input {
-                                    width: 100%;
-                                    background-color: rgba(13, 17, 23, 0.55);
-                                    border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
-                                    border-radius: 0.5rem; /* rounded-lg */
-                                    padding: 1rem;
-                                    color: #E6EDF3; /* text-brand-text */
-                                    transition: all 0.12s ease-in-out;
-                                    caret-color: #FBBF24;
-                                    font-size: 1rem;
-                                }
-                                /* Filled state: make inner background slightly lighter and text brighter */
-                                input.form-input[data-empty="false"],
-                                textarea.form-input[data-empty="false"],
-                                .select-button:not(.placeholder) {
-                                    /* keep the same inner background as empty state to avoid visual shift */
-                                    background-color: rgba(13,17,23,0.55) !important;
-                                    color: #E6EDF3 !important;
-                                    border-color: rgba(251,191,36,1) !important;
-                                    box-shadow: none;
-                                }
-                                /* Ensure the filled select button value is visible */
-                                .select-button:not(.placeholder) .select-button-value {
-                                    color: #E6EDF3;
-                                }
-                                /* Hide any placeholder text inside the select button when empty */
-                                .select-button.placeholder .select-button-value {
-                                    color: transparent;
-                                }
-                                /* Smooth transitions for fill state */
-                                .form-input, .select-button {
-                                    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-                                }
-                                /* --- Neutralize browser autofill styling (Chrome/Safari/Edge and Firefox) --- */
-                                input.form-input:-webkit-autofill,
-                                textarea.form-input:-webkit-autofill,
-                                input.form-input:-webkit-autofill:focus,
-                                textarea.form-input:-webkit-autofill:focus {
-                                    -webkit-box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                                    -webkit-text-fill-color: #E6EDF3 !important;
-                                    transition: background-color 5000s ease-in-out 0s !important;
-                                }
-                                input.form-input:-moz-autofill,
-                                textarea.form-input:-moz-autofill {
-                                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
-                                    -moz-text-fill-color: #E6EDF3 !important;
-                                }
-                                                .form-label {
-                                                    position: absolute;
-                                                    left: 1rem;
-                                                    top: 1rem;
-                                                    color: #FBBF24; /* label stays yellow on the border */
-                                                    pointer-events: none;
-                                                    transition: all 0.12s ease-in-out;
-                                                    background-color: #0d1117; /* match page background so label sits cleanly */
-                                                    font-weight: 600;
-                                                    font-size: 0.95rem;
-                                                    padding: 0 0.5rem;
-                                                    z-index: 30; /* ensure label floats above field text */
-                                                    display: inline-block;
-                                                }
-                                                /* Apply focus/filled styles to inputs and textareas only (not selects) */
-                                                input.form-input:focus,
-                                                textarea.form-input:focus,
-                                                input.form-input:not(:placeholder-shown),
-                                                input.form-input[data-empty="false"] {
-                                                    border-color: rgba(251,191,36,1); /* bright on focus/filled */
-                                                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.08);
-                                                    outline: none;
-                                                }
-                                                input.form-input:focus + .form-label,
-                                                input.form-input:not(:placeholder-shown) + .form-label,
-                                                input.form-input[data-empty="false"] + .form-label,
-                                                textarea.form-input:focus + .form-label,
-                                                textarea.form-input:not(:placeholder-shown) + .form-label,
-                                                textarea.form-input[data-empty="false"] + .form-label {
-                                                    top: -0.6rem;
-                                                    left: 0.9rem;
-                                                    font-size: 0.8rem; /* slightly smaller */
-                                                    color: #FBBF24; /* label remains yellow */
-                                                    padding: 0 0.35rem;
-                                                    background-color: #0d1117; /* match page background so label appears cut out of border */
-                                                }
+                .form-input {
+                    width: 100%;
+                    background-color: rgba(13, 17, 23, 0.55);
+                    border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
+                    border-radius: 0.5rem; /* rounded-lg */
+                    padding: 1rem;
+                    color: #E6EDF3; /* text-brand-text */
+                    transition: all 0.12s ease-in-out;
+                    caret-color: #FBBF24;
+                    font-size: 1rem;
+                }
+                /* Filled state: make inner background slightly lighter and text brighter */
+                input.form-input[data-empty="false"],
+                textarea.form-input[data-empty="false"],
+                .select-button:not(.placeholder) {
+                    /* keep the same inner background as empty state to avoid visual shift */
+                    background-color: rgba(13,17,23,0.55) !important;
+                    color: #E6EDF3 !important;
+                    border-color: rgba(251,191,36,1) !important;
+                    box-shadow: none;
+                }
+                /* Ensure the filled select button value is visible */
+                .select-button:not(.placeholder) .select-button-value {
+                    color: #E6EDF3;
+                }
+                /* Hide any placeholder text inside the select button when empty */
+                .select-button.placeholder .select-button-value {
+                    color: transparent;
+                }
+                /* Smooth transitions for fill state */
+                .form-input, .select-button {
+                    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+                }
+                /* --- Neutralize browser autofill styling (Chrome/Safari/Edge and Firefox) --- */
+                input.form-input:-webkit-autofill,
+                textarea.form-input:-webkit-autofill,
+                input.form-input:-webkit-autofill:focus,
+                textarea.form-input:-webkit-autofill:focus {
+                    -webkit-box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
+                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
+                    -webkit-text-fill-color: #E6EDF3 !important;
+                    transition: background-color 5000s ease-in-out 0s !important;
+                }
+                input.form-input:-moz-autofill,
+                textarea.form-input:-moz-autofill {
+                    box-shadow: 0 0 0px 1000px rgba(13,17,23,0.55) inset !important;
+                    -moz-text-fill-color: #E6EDF3 !important;
+                }
+                .form-label {
+                    position: absolute;
+                    left: 1rem;
+                    top: 1rem;
+                    color: #FBBF24; /* label stays yellow on the border */
+                    pointer-events: none;
+                    transition: all 0.12s ease-in-out;
+                    background-color: #0d1117; /* match page background so label sits cleanly */
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    padding: 0 0.5rem;
+                    z-index: 30; /* ensure label floats above field text */
+                    display: inline-block;
+                }
+                /* Apply focus/filled styles to inputs and textareas only (not selects) */
+                input.form-input:focus,
+                textarea.form-input:focus,
+                input.form-input:not(:placeholder-shown),
+                input.form-input[data-empty="false"] {
+                    border-color: rgba(251,191,36,1); /* bright on focus/filled */
+                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.08);
+                    outline: none;
+                }
+                input.form-input:focus + .form-label,
+                input.form-input:not(:placeholder-shown) + .form-label,
+                input.form-input[data-empty="false"] + .form-label,
+                textarea.form-input:focus + .form-label,
+                textarea.form-input:not(:placeholder-shown) + .form-label,
+                textarea.form-input[data-empty="false"] + .form-label {
+                    top: -0.6rem;
+                    left: 0.9rem;
+                    font-size: 0.8rem; /* slightly smaller */
+                    color: #FBBF24; /* label remains yellow */
+                    padding: 0 0.35rem;
+                    background-color: #0d1117; /* match page background so label appears cut out of border */
+                }
 
-                                                /* Selects: style the wrapper instead of the select itself to avoid double borders */
-                                                .select-wrapper:focus-within,
-                                                .select-wrapper[data-empty="false"] {
-                                                    border-color: rgba(251,191,36,1);
-                                                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.06);
-                                                }
-                                                .select-wrapper:focus-within .form-label,
-                                                .select-wrapper[data-empty="false"] .form-label {
-                                                    top: -0.6rem;
-                                                    left: 0.9rem;
-                                                    font-size: 0.8rem;
-                                                    color: #FBBF24;
-                                                    padding: 0 0.35rem;
-                                                    background-color: #0d1117;
-                                                }
-
-                                                                /* (no-op) Removed data-always-float usage; all labels now follow standard floating rules */
-                                /* Label variant that sits on top (not floating) */
-                                .form-label-top {
-                                    position: static;
-                                    display: block;
-                                    margin-bottom: 0.5rem;
-                                    color: #8B949E;
-                                }
-                                /* Make selects visually match inputs: let the select itself handle padding and background */
-                                select.form-input {
-                                    -webkit-appearance: none;
-                                    appearance: none;
-                                    background-color: rgba(13, 17, 23, 0.55);
-                                    color: #E6EDF3;
-                                    border: none; /* use wrapper border */
-                                    padding-top: 1.9rem; /* bump top padding so label (at 1rem) doesn't overlap option text */
-                                    padding-bottom: 1rem;
-                                    padding-left: 1rem;
-                                    padding-right: 2.5rem; /* leave room for caret */
-                                    border-radius: 0.5rem; /* match wrapper radius when background shown */
-                                    width: 100%;
-                                    box-sizing: border-box;
-                                    line-height: 1.6rem;
-                                    position: relative;
-                                    z-index: 1;
-                                }
-                                                /* Custom arrow for selects to match the theme */
-                                                .select-wrapper {
-                                                    position: relative;
-                                                }
-                                                                .select-wrapper::after {
-                                                                    content: '\u25BE'; /* small down caret */
-                                                    position: absolute;
-                                                    right: 1rem;
-                                                    top: 50%;
-                                                    transform: translateY(-50%);
-                                                    color: rgba(251,191,36,0.95);
-                                                    pointer-events: none;
-                                                }
-                                                                /* make wrapper mimic input border so select looks identical */
-                                                                .select-wrapper .form-input {
-                                                                    border: none;
-                                                                    background: transparent;
-                                                                    width: 100%;
-                                                                }
-                                                                .select-wrapper {
-                                                                    border: 1px solid rgba(251,191,36,0.65);
-                                                                    border-radius: 0.5rem;
-                                                                    padding: 0; /* let select handle internal padding */
-                                                                    background: transparent; /* select has its own background */
-                                                                    position: relative;
-                                                                    z-index: auto; /* avoid creating a new stacking context */
-                                                                }
-                                                                /* Option styling - limited cross-browser support but helps theme */
-                                                                select.form-input option {
-                                                                    background-color: #0d1117;
-                                                                    color: #E6EDF3;
-                                                                }
-                                                                /* FloatingSelect specific styles */
-                                                                .select-button {
-                                                                    display: flex;
-                                                                    align-items: center;
-                                                                    justify-content: space-between;
-                                                                    gap: 0.5rem;
-                                                                    cursor: pointer;
-                                                                }
-                                                                /* make button padding match input so label doesn't overlap the inner text */
-                                                                .select-button {
-                                                                    padding-top: 1rem;
-                                                                    padding-bottom: 1rem;
-                                                                    padding-left: 1rem;
-                                                                    padding-right: 2.5rem;
-                                                                    box-sizing: border-box;
-                                                                    min-height: 3rem;
-                                                                }
-                                                                .select-button.placeholder { color: #8B949E; }
-                                                                .select-caret { color: rgba(251,191,36,0.95); margin-left: 0.5rem; }
-                                                                .select-button .select-button-value {
-                                                                    display: block;
-                                                                    line-height: 1.6rem;
-                                                                    color: inherit;
-                                                                }
-                                                                .select-dropdown {
-                                                                    position: absolute;
-                                                                    top: calc(100% + 0.5rem);
-                                                                    left: 0;
-                                                                    right: 0;
-                                                                    background: #0d1117;
-                                                                    border: 1px solid rgba(251,191,36,0.12);
-                                                                    border-radius: 0.5rem;
-                                                                    box-shadow: 0 6px 24px rgba(2,6,23,0.6);
-                                                                    z-index: 9999; /* ensure dropdown sits above labels/other UI */
-                                                                    max-height: 14rem;
-                                                                    overflow: auto;
-                                                                }
-                                                                /* ensure the clickable button area sits below the dropdown layer */
-                                                                .select-button {
-                                                                    position: relative;
-                                                                    z-index: 5;
-                                                                }
-                                                                .select-option {
-                                                                    padding: 0.75rem 1rem;
-                                                                    cursor: pointer;
-                                                                    color: #E6EDF3;
-                                                                }
-                                                                .select-option:hover, .select-option.selected {
-                                                                    background: rgba(251,191,36,0.08);
-                                                                    color: #FBBF24;
-                                                                }
-                
-                .animate-form-section {
-                  opacity: 0;
-                  transform: translateY(20px);
-                  animation: item-enter 0.5s ease-out forwards;
+                /* Selects: style the wrapper instead of the select itself to avoid double borders */
+                .select-wrapper:focus-within,
+                .select-wrapper[data-empty="false"] {
+                    border-color: rgba(251,191,36,1);
+                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.06);
+                }
+                .select-wrapper:focus-within .form-label,
+                .select-wrapper[data-empty="false"] .form-label {
+                    top: -0.6rem;
+                    left: 0.9rem;
+                    font-size: 0.8rem;
+                    color: #FBBF24;
+                    padding: 0 0.35rem;
+                    background-color: #0d1117;
                 }
             `}</style>
         </>
     );
 };
 
+// FIX: Added the main App component to provide the Router context and a default export.
 const App: React.FC = () => (
     <Router>
         <AppContent />

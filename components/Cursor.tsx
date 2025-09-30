@@ -8,6 +8,8 @@ const Cursor: React.FC = () => {
 
     const mousePos = useRef({ x: -100, y: -100 });
     const ringPos = useRef({ x: -100, y: -100 });
+    const isHoveringRef = useRef(isHovering);
+    isHoveringRef.current = isHovering;
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -42,7 +44,9 @@ const Cursor: React.FC = () => {
             ringPos.current.x += dx * CURSOR_SPEED;
             ringPos.current.y += dy * CURSOR_SPEED;
             if (ringRef.current) {
-                ringRef.current.style.transform = `translate(${ringPos.current.x - 20}px, ${ringPos.current.y - 20}px)`;
+                const size = isHoveringRef.current ? 36 : 24;
+                const offset = size / 2;
+                ringRef.current.style.transform = `translate(${ringPos.current.x - offset}px, ${ringPos.current.y - offset}px)`;
             }
 
             animationFrameId = requestAnimationFrame(animateCursor);
@@ -61,7 +65,7 @@ const Cursor: React.FC = () => {
     return (
         <div 
             ref={ringRef} 
-            className={`cursor-ring ${isHovering ? 'hover' : ''}`}
+            className={`cursor-orb ${isHovering ? 'hover' : ''}`}
         ></div>
     );
 };
