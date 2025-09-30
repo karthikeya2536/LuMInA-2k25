@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FloatingSelect from './FloatingSelect';
 import type { Event, User, TeamMember } from '../types';
 
@@ -25,11 +25,55 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
   const [member3Data, setMember3Data] = useState(memberInitialState);
   const [member4Data, setMember4Data] = useState(memberInitialState);
   const [tacticalShowdownTeamSize, setTacticalShowdownTeamSize] = useState(1);
+  const [numberOfMembers, setNumberOfMembers] = useState(1);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [selectedPriceTier, setSelectedPriceTier] = useState<string>(event.pricingTiers[0]);
+
+  const rangasthalamOptions = [
+    { value: 'Dance (Per Person): 60', label: 'Dance (Per Person) - 60' },
+    { value: 'Dance (Pair): 100', label: 'Dance (Pair) - 100' },
+    { value: 'Dance (Group 3-5): 150', label: 'Dance (Group 3-5) - 150' },
+    { value: 'Dance (Group >5): 200', label: 'Dance (Group >5) - 200' },
+    { value: 'Song (Per Person): 50', label: 'Song (Per Person) - 50' },
+    { value: 'Theme Walk (Per Person): 50', label: 'Theme Walk (Per Person) - 50' },
+    { value: 'Audience Pass: 60', label: 'Audience Pass - 60' },
+  ];
+
+  const [rangasthalamTier, setRangasthalamTier] = useState(rangasthalamOptions[0].value);
+
+  useEffect(() => {
+    if (event.eventName === 'Rangasthalam') {
+      setSelectedPriceTier(rangasthalamTier);
+      if (rangasthalamTier.includes('Pair')) {
+        setNumberOfMembers(2);
+      } else if (rangasthalamTier.includes('Group 3-5')) {
+        setNumberOfMembers(3);
+      } else if (rangasthalamTier.includes('Group >5')) {
+        setNumberOfMembers(6);
+      } else {
+        setNumberOfMembers(1);
+      }
+    }
+  }, [rangasthalamTier, event.eventName, setSelectedPriceTier]);
+
+  useEffect(() => {
+    setTeamMembers(Array.from({ length: Math.max(0, numberOfMembers - 1) }, () => memberInitialState));
+  }, [numberOfMembers]);
+
+  const handleTeamMemberChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value: rawValue } = e.target;
+    const value = name === 'rollNo' ? rawValue.toUpperCase() : rawValue;
+    setTeamMembers(prev => {
+        const updatedMembers = [...prev];
+        updatedMembers[index] = { ...updatedMembers[index], [name]: value };
+        return updatedMembers;
+    });
+  };
 
   const createChangeHandler = (setter: React.Dispatch<React.SetStateAction<typeof memberInitialState>>) => 
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -169,6 +213,19 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto mt-12 space-y-10">
         <div className="bg-brand-secondary/30 p-8 rounded-xl shadow-lg border border-brand-secondary">
           <h2 className="text-2xl font-bold mb-8 text-white border-b border-brand-primary/50 pb-4">1. Primary Participant Details</h2>
+          {event.eventName === 'Rangasthalam' && (
+            <div className="form-group">
+                <FloatingSelect
+                    label="Select your category"
+                    id="rangasthalamTier"
+                    name="rangasthalamTier"
+                    required
+                    value={rangasthalamTier}
+                    onChange={(e) => setRangasthalamTier(e.target.value)}
+                    options={rangasthalamOptions}
+                />
+            </div>
+          )}
           {renderMemberFields(formData, handleInputChange, 1)}
         </div>
 
