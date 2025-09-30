@@ -170,7 +170,7 @@ const AppContent: React.FC = () => {
             <style>{`
                 /* --- Custom Cursor --- */
                 html, * {
-                  cursor: none;
+                  cursor: none !important;
                 }
                 .cursor-ring {
                   position: fixed;
