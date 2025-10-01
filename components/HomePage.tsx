@@ -2,6 +2,7 @@ import React from 'react';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import AboutSection from './AboutSection';
 import CountdownTimer from './CountdownTimer';
+import type { Event } from '../types';
 
 interface HomePageProps {
   onNavigateToEvents: () => void;

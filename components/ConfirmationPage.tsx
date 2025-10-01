@@ -22,8 +22,8 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ onNavigateToEvents,
 
   useEffect(() => {
     if (!registration) {
-      // If no registration data is passed, redirect to the events page.
-      navigate('/events');
+      // If no registration data is passed on page load/reload, redirect to the homepage.
+      navigate('/');
     }
   }, [registration, navigate]);
 

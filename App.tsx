@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate, useParams, useLocation, Navigate } from 'react-router-dom';
 import type { Event, User, Registration, TeamMember, Page } from './types';
 import { MOCK_EVENTS, MOCK_USER } from './data/mockData';
 import HomePage from './components/HomePage';
@@ -125,15 +125,18 @@ const AppContent: React.FC = () => {
 
     const EventDetailsWrapper = () => {
         const { eventId } = useParams<{ eventId: string }>();
-        const event = MOCK_EVENTS.find(e => e.id.toString() === eventId);
-        if (!event) {
-            // Optional: Redirect to a 404 page or back to events list
-            useEffect(() => {
-                navigate('/events');
-            }, [navigate]);
-            return null;
+        const navigate = useNavigate();
+
+        const eventFromUrl = MOCK_EVENTS.find(e => e.id.toString() === eventId);
+        
+        // On direct load/reload, selectedEvent is null. This is the primary guard.
+        // Also protects against out-of-sync state (e.g., using browser back/forward) and invalid event IDs.
+        if (!selectedEvent || !eventFromUrl || selectedEvent.id !== eventFromUrl.id) {
+            // Use declarative redirect for cleaner and more reliable navigation on direct page loads.
+            return <Navigate to="/" replace />;
         }
-        return <EventDetailsPage event={event} onRegister={() => handleNavigateToRegister(event)} onBack={() => navigate('/events')} />;
+
+        return <EventDetailsPage event={eventFromUrl} onRegister={() => handleNavigateToRegister(eventFromUrl)} onBack={() => navigate('/events')} />;
     };
     
     return (
@@ -158,7 +161,7 @@ const AppContent: React.FC = () => {
                             <Route path="/gallery" element={<GalleryPage onBack={() => navigate(-1)} />} />
                             <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />
                             <Route path="/event/:eventId" element={<EventDetailsWrapper />} />
-                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} /> : <EventsPage events={MOCK_EVENTS} onSelectEvent={handleSelectEvent} onBack={() => navigate('/')} />} />
+                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} /> : <Navigate to="/" replace />} />
                             <Route path="/confirmation" element={<ConfirmationPage onNavigateToEvents={handleNavigateToEvents} onNavigateHome={() => navigate('/')} />} />
                         </Routes>
                     </main>
@@ -296,7 +299,101 @@ const AppContent: React.FC = () => {
                 .animate-splash-loader {
                     animation: splash-loader-anim 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
                 }
+
+                /* --- Countdown Timer Styles (Split-Flap) --- */
+                .flip-unit {
+                  position: relative;
+                  width: 50px;
+                  height: 60px;
+                  font-family: monospace;
+                  perspective: 400px;
+                  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                  border-radius: 6px;
+                }
+                @media (min-width: 768px) {
+                  .flip-unit {
+                    width: 70px;
+                    height: 80px;
+                  }
+                }
+                .flip-unit-label {
+                  margin-top: 0.75rem;
+                  font-size: 0.75rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: #8B949E;
+                }
+
+                .digit-card {
+                  position: absolute;
+                  left: 0;
+                  width: 100%;
+                  display: flex;
+                  justify-content: center;
+                  font-size: 2.5rem;
+                  font-weight: bold;
+                  color: #FBBF24;
+                  background-color: #161B22;
+                  overflow: hidden;
+                  box-sizing: border-box;
+                }
+                @media (min-width: 768px) {
+                  .digit-card {
+                    font-size: 3rem;
+                  }
+                }
+
+                .static-card.top-card, .flipper-front {
+                  top: 0;
+                  height: 50%;
+                  border-radius: 6px 6px 0 0;
+                  line-height: 60px; /* Aligns top half of text */
+                }
+                .static-card.bottom-card, .flipper-back {
+                  top: 50%;
+                  height: 50%;
+                  border-radius: 0 0 6px 6px;
+                  line-height: 0; /* Aligns bottom half of text */
+                }
                 
+                @media (min-width: 768px) {
+                    .static-card.top-card, .flipper-front {
+                        line-height: 80px;
+                    }
+                }
+                
+                .static-card.top-card { z-index: 1; }
+                .static-card.bottom-card { z-index: 0; }
+
+                .flipper {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 50%;
+                  z-index: 10;
+                  transform-style: preserve-3d;
+                  transform-origin: bottom;
+                  transition: none; /* Transition is applied via class */
+                }
+                .flipper.flipping {
+                  transform: rotateX(-180deg);
+                  transition: transform 0.6s cubic-bezier(0.3, 0, 0.15, 1);
+                  box-shadow: 0 10px 10px -5px rgba(0,0,0,0.4); /* Shadow for flipping element */
+                }
+
+                .flipper-card {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  backface-visibility: hidden;
+                }
+                .flipper-front { z-index: 2; transform: rotateX(0deg); }
+                .flipper-back { transform: rotateX(180deg); }
+
+
                 /* Registration Form Styles */
                 .form-group {
                   position: relative;
