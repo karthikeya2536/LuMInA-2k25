@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           className="text-3xl font-bold text-white cursor-pointer hover:text-brand-accent transition-colors duration-300"
           onClick={() => onNavigate('home')}
         >
-          LuMInA 2k25
+          <img src="../assets/logo.png" alt="Lumina Fest 2025 Logo" className="h-24" />
         </button>
         <nav className="hidden md:flex items-center space-x-4">
           <NavLink page="home">Home</NavLink>

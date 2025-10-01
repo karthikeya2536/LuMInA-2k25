@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import ConfirmationPage from './components/ConfirmationPage';
 import SchedulePage from './components/SchedulePage';
 
+
 const AppContent: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -177,11 +178,11 @@ const AppContent: React.FC = () => {
                   position: fixed;
                   width: 24px;
                   height: 24px;
-                  background-color: rgba(251, 191, 36, 0.7); /* brand-accent */
+                  background-color: rgba(57, 255, 20, 0.7); /* Neon Green */
                   border-radius: 50%;
                   pointer-events: none;
                   z-index: 10000;
-                  box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.4);
+                  box-shadow: 0 0 20px 5px rgba(57, 255, 20, 0.4);
                   /* Smooth transitions for all properties */
                   transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
                 }
@@ -189,8 +190,8 @@ const AppContent: React.FC = () => {
                 .cursor-orb.hover {
                   width: 36px; /* Grow the orb */
                   height: 36px;
-                  background-color: rgba(251, 191, 36, 0.9);
-                  box-shadow: 0 0 35px 10px rgba(251, 191, 36, 0.6);
+                  background-color: rgba(57, 255, 20, 0.9);
+                  box-shadow: 0 0 35px 10px rgba(57, 255, 20, 0.6);
                 }
 
                 /* --- Reveal on Scroll --- */
@@ -210,10 +211,10 @@ const AppContent: React.FC = () => {
                   position: relative;
                   isolation: isolate;
                   overflow: hidden;
-                  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+                  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
                 }
                 .hero-button:hover {
-                    box-shadow: 0 4px 25px rgba(251, 191, 36, 0.6);
+                    box-shadow: 0 4px 25px rgba(255, 215, 0, 0.6);
                 }
 
                 /* --- 3D Event Card Styles --- */
@@ -230,7 +231,7 @@ const AppContent: React.FC = () => {
                 }
 
                 .card-3d-wrapper:hover .card-3d-inner {
-                    --border-color: rgba(251, 191, 36, 0.5);
+                    --border-color: rgba(255, 215, 0, 0.5);
                 }
 
                 .card-3d-glow {
@@ -241,7 +242,7 @@ const AppContent: React.FC = () => {
                   border-radius: 0.5rem; /* same as card */
                   background: radial-gradient(
                     circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                    rgba(251, 191, 36, 0.3),
+                    rgba(255, 215, 0, 0.3),
                     transparent 40%
                   );
                   opacity: 0;
@@ -272,8 +273,8 @@ const AppContent: React.FC = () => {
                 
                 .bg-grid-brand-primary\/10 {
                     background-image:
-                        linear-gradient(to right, rgba(249, 115, 22, 0.1) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(249, 115, 22, 0.1) 1px, transparent 1px);
+                        linear-gradient(to right, rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
                     background-size: 40px 40px;
                 }
 
@@ -331,8 +332,7 @@ const AppContent: React.FC = () => {
                   display: flex;
                   justify-content: center;
                   font-size: 2.5rem;
-                  font-weight: bold;
-                  color: #FBBF24;
+                  color: #FFD700;
                   background-color: #161B22;
                   overflow: hidden;
                   box-sizing: border-box;
@@ -404,7 +404,7 @@ const AppContent: React.FC = () => {
                     width: 100%;
                     box-sizing: border-box;
                     background-color: rgba(13, 17, 23, 0.55);
-                    border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
+                    border: 1px solid rgba(255,215,0,0.65); /* warm yellow border to match site */
                     border-radius: 0.5rem; /* rounded-lg */
                     padding: 1rem;
                     color: #E6EDF3; /* text-brand-text */
@@ -413,7 +413,7 @@ const AppContent: React.FC = () => {
                 }
                 input.form-input {
                   height: 3.5rem;
-                  caret-color: #FBBF24;
+                  caret-color: #FFD700;
                 }
                 .form-label {
                     position: absolute;
@@ -434,8 +434,8 @@ const AppContent: React.FC = () => {
                 textarea.form-input:focus,
                 input.form-input:not(:placeholder-shown),
                 input.form-input[data-empty="false"] {
-                    border-color: rgba(251,191,36,1); /* bright on focus/filled */
-                    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.08);
+                    border-color: rgba(255,215,0,1); /* bright on focus/filled */
+                    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
                     outline: none;
                 }
                 input.form-input:focus + .form-label,
@@ -447,7 +447,7 @@ const AppContent: React.FC = () => {
                     top: -0.6rem;
                     left: 0.9rem;
                     font-size: 0.8rem;
-                    color: #FBBF24;
+                    color: #FFD700;
                     padding: 0 0.35rem;
                     background-color: #0d1117; /* match page background */
                     z-index: 10;
@@ -461,7 +461,7 @@ const AppContent: React.FC = () => {
                   height: 3.5rem;
                   border-radius: 0.5rem; /* rounded-lg */
                   transition: all 0.12s ease-in-out;
-                  border: 1px solid rgba(251,191,36,0.65); /* warm yellow border to match site */
+                  border: 1px solid rgba(255,215,0,0.65); /* warm yellow border to match site */
                   background-color: rgba(13, 17, 23, 0.55);
                   box-sizing: border-box; /* FIX: Ensures total height matches inputs */
                 }
@@ -494,7 +494,7 @@ const AppContent: React.FC = () => {
                 }
                 .select-wrapper:focus-within .select-button::after,
                 .select-button[aria-expanded="true"]::after {
-                  border-color: #FBBF24;
+                  border-color: #FFD700;
                 }
                 .select-button[aria-expanded="true"]::after {
                   transform: translateY(-25%) rotate(225deg);
@@ -504,8 +504,8 @@ const AppContent: React.FC = () => {
                 }
                 .select-wrapper:focus-within,
                 .select-wrapper[data-empty="false"] {
-                  border-color: rgba(251,191,36,1);
-                  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.08);
+                  border-color: rgba(255,215,0,1);
+                  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.08);
                   outline: none;
                 }
                 .select-wrapper:focus-within .form-label,
@@ -513,7 +513,7 @@ const AppContent: React.FC = () => {
                     top: -0.6rem;
                     left: 0.9rem;
                     font-size: 0.8rem;
-                    color: #FBBF24;
+                    color: #FFD700;
                     padding: 0 0.35rem;
                     background-color: #0d1117;
                     z-index: 10;
@@ -524,7 +524,7 @@ const AppContent: React.FC = () => {
                   left: 0;
                   right: 0;
                   background-color: #161B22; /* brand-secondary */
-                  border: 1px solid rgba(251,191,36,0.65);
+                  border: 1px solid rgba(255,215,0,0.65);
                   border-radius: 0.5rem;
                   padding: 0.5rem;
                   z-index: 20;
@@ -540,12 +540,12 @@ const AppContent: React.FC = () => {
                   transition: background-color 0.15s ease;
                 }
                 .select-option:hover {
-                  background-color: rgba(251, 191, 36, 0.1);
-                  color: #FBBF24;
+                  background-color: rgba(255, 215, 0, 0.1);
+                  color: #FFD700;
                 }
                 .select-option.selected {
-                  background-color: rgba(249, 115, 22, 0.2);
-                  color: #F97316;
+                  background-color: rgba(0, 255, 0, 0.2);
+                  color: #00FF00;
                   font-weight: 600;
                 }
 
