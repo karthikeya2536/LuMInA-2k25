@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 
-// A thematic background: a digital circuit board with pulsing lights.
 const ParticleBackground: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -12,140 +11,134 @@ const ParticleBackground: React.FC = () => {
         if (!ctx) return;
 
         let animationFrameId: number;
+        let particles: Particle[] = [];
+        const particleCount = 100; // Reduced for performance and aesthetics with lines
+        const connectDistance = 120;
+        const mouseConnectDistance = 200;
 
-        const GRID_SPACING = 40;
-        const PULSE_SPEED = 2;
-        const NUM_PULSES = 25;
-
-        let points: { x: number; y: number }[][] = [];
-        let paths: { p1: { x: number; y: number }; p2: { x: number; y: number } }[] = [];
-        let pulses: { pathIndex: number; progress: number; speed: number }[] = [];
-        
-        const colors = {
-            gridPoint: 'rgba(139, 148, 158, 0.2)', // brand-text-dark
-            gridLine: 'rgba(139, 148, 158, 0.1)', // brand-text-dark
-            pulse: '#DAA520', // brand-primary
+        const mouse = {
+            x: undefined as number | undefined,
+            y: undefined as number | undefined,
         };
 
-        const init = () => {
+        const handleMouseMove = (event: MouseEvent) => {
+            mouse.x = event.clientX;
+            mouse.y = event.clientY;
+        };
+        const handleMouseOut = () => {
+            mouse.x = undefined;
+            mouse.y = undefined;
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseout', handleMouseOut);
+
+        const resizeCanvas = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
-            points = [];
-            paths = [];
-            pulses = [];
+            initParticles();
+        };
 
-            const cols = Math.ceil(canvas.width / GRID_SPACING);
-            const rows = Math.ceil(canvas.height / GRID_SPACING);
+        class Particle {
+            x: number;
+            y: number;
+            size: number;
+            speedX: number;
+            speedY: number;
 
-            // Create grid points
-            for (let i = 0; i <= cols; i++) {
-                points[i] = [];
-                for (let j = 0; j <= rows; j++) {
-                    points[i][j] = { x: i * GRID_SPACING, y: j * GRID_SPACING };
-                }
-            }
-            
-            // Create paths (circuits)
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    const p1 = points[i][j];
-                    if (Math.random() > 0.5 && i + 1 <= cols) { // Connect to right neighbor
-                        const p2 = points[i+1][j];
-                        paths.push({p1, p2});
-                    }
-                    if (Math.random() > 0.5 && j + 1 <= rows) { // Connect to bottom neighbor
-                        const p2 = points[i][j+1];
-                        paths.push({p1, p2});
-                    }
-                }
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
             }
 
-            if (paths.length === 0) return; // ainty check
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
 
-            // Create pulses
-            for (let i = 0; i < NUM_PULSES; i++) {
-                pulses.push({
-                    pathIndex: Math.floor(Math.random() * paths.length),
-                    progress: Math.random(),
-                    speed: (Math.random() * 0.5 + 0.5) * PULSE_SPEED,
-                });
+                if (this.x > canvas.width + this.size) this.x = -this.size;
+                if (this.x < -this.size) this.x = canvas.width + this.size;
+                if (this.y > canvas.height + this.size) this.y = -this.size;
+                if (this.y < -this.size) this.y = canvas.height + this.size;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(139, 148, 158, 0.7)`; // text-brand-text-dark
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const initParticles = () => {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
             }
         };
 
-        const draw = () => {
-            // Fading effect by drawing a semi-transparent background
-            ctx.fillStyle = 'rgba(13, 17, 23, 0.1)'; // brand-bg with alpha
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const connectParticles = () => {
+            for (let i = 0; i < particles.length; i++) {
+                // Connect particles to each other
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Draw grid lines
-            ctx.strokeStyle = colors.gridLine;
-            ctx.lineWidth = 0.5;
-            paths.forEach(path => {
-                ctx.beginPath();
-                ctx.moveTo(path.p1.x, path.p1.y);
-                ctx.lineTo(path.p2.x, path.p2.y);
-                ctx.stroke();
-            });
+                    if (distance < connectDistance) {
+                        const opacity = 1 - (distance / connectDistance);
+                        ctx.strokeStyle = `rgba(139, 148, 158, ${opacity * 0.5})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+                
+                // Connect particles to mouse
+                if (mouse.x !== undefined && mouse.y !== undefined) {
+                    const dx = particles[i].x - mouse.x;
+                    const dy = particles[i].y - mouse.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Draw grid points
-            ctx.fillStyle = colors.gridPoint;
-            for (let i = 0; i < points.length; i++) {
-                for (let j = 0; j < points[i].length; j++) {
-                    const point = points[i][j];
-                    ctx.beginPath();
-                    ctx.arc(point.x, point.y, 1, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (distance < mouseConnectDistance) {
+                        const opacity = 1 - (distance / mouseConnectDistance);
+                        ctx.strokeStyle = `rgba(218, 165, 32, ${opacity * 0.6})`; // brand-primary color
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
                 }
             }
-
-            // Update and draw pulses
-            pulses.forEach(pulse => {
-                const path = paths[pulse.pathIndex];
-                if (!path) return;
-
-                const dx = path.p2.x - path.p1.x;
-                const dy = path.p2.y - path.p1.y;
-                const pathLength = Math.sqrt(dx*dx + dy*dy);
-
-                if (pathLength === 0) return;
-
-                pulse.progress += pulse.speed / pathLength;
-
-                if (pulse.progress >= 1) {
-                    pulse.progress = 0;
-                    pulse.pathIndex = Math.floor(Math.random() * paths.length);
-                }
-
-                const currentX = path.p1.x + dx * pulse.progress;
-                const currentY = path.p1.y + dy * pulse.progress;
-
-                ctx.beginPath();
-                ctx.arc(currentX, currentY, 2, 0, Math.PI * 2);
-                ctx.fillStyle = colors.pulse;
-                
-                // Add glow effect
-                ctx.shadowColor = colors.pulse;
-                ctx.shadowBlur = 10;
-                ctx.fill();
-
-                // Reset shadow for other elements
-                ctx.shadowBlur = 0;
-            });
         };
 
         const animate = () => {
-            draw();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (const particle of particles) {
+                particle.update();
+                particle.draw();
+            }
+            
+            connectParticles();
+
             animationFrameId = requestAnimationFrame(animate);
         };
 
-        init();
+        resizeCanvas();
         animate();
 
-        window.addEventListener('resize', init);
+        window.addEventListener('resize', resizeCanvas);
 
         return () => {
-            window.removeEventListener('resize', init);
+            window.removeEventListener('resize', resizeCanvas);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseout', handleMouseOut);
             cancelAnimationFrame(animationFrameId);
         };
 
