@@ -5,7 +5,8 @@ import type { Event, User, TeamMember } from '../types';
 interface RegistrationPageProps {
   event: Event;
   user: User;
-  onSubmit: (registrationData: { selectedPriceTier: string, teamMembers: TeamMember[] }) => void;
+  isSubmitting: boolean;
+  onSubmit: (registrationData: { selectedPriceTier: string, teamMembers: TeamMember[], teamName?: string }) => void;
   onBack: () => void;
 }
 
@@ -18,7 +19,7 @@ const memberInitialState: TeamMember = {
   year: '',
 };
 
-const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubmit, onBack }) => {
+const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubmit, onBack, isSubmitting }) => {
   // --- Unified State ---
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([memberInitialState]);
   const [teamName, setTeamName] = useState('');
@@ -41,9 +42,7 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
   const [groupSizeOver5, setGroupSizeOver5] = useState('6');
   
   // --- Form State ---
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
   const [selectedPriceTier, setSelectedPriceTier] = useState<string>(event.pricingTiers[0]);
 
   // --- Determine number of members based on event and user selections ---
@@ -112,9 +111,8 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
   const isRangasthalam = event.eventName === 'RANGASTALAM';
   const hasEventOptions = isRangasthalam || isDebate || isTacticalShowdown || isLogicalLeague;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setSubmitError(null);
 
     // --- Form Validation ---
@@ -147,7 +145,6 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
         }
     });
 
-    // Additional validation for Rangasthalam >5 group
     if (event.eventName === 'RANGASTALAM' && rangasthalamTier.includes('Group >5')) {
       const size = parseInt(groupSizeOver5, 10);
       if (isNaN(size) || size < 6) {
@@ -157,65 +154,16 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
     
     if (validationErrors.length > 0) {
         setSubmitError(validationErrors.join('\n'));
-        setIsSubmitting(false);
         return;
     }
     // --- End Validation ---
 
-    const googleFormActionURL = 'https://docs.google.com/forms/d/e/1FAIpQLSejMRTIGWD_tpJOsOC1UWYs3W7-F3vINXZIljI14ZTxUHl3Cg/formResponse';
-    const googleFormData = new FormData();
-
-    googleFormData.append('entry.1721128365', event.eventName);
-    
-    // Add primary participant details
-    const primaryParticipant = teamMembers[0];
-    googleFormData.append('entry.1994438372', primaryParticipant.fullName);
-    googleFormData.append('entry.632548788', primaryParticipant.phoneNumber || '');
-    googleFormData.append('entry.1235040660', primaryParticipant.rollNo);
-    googleFormData.append('entry.1457360595', primaryParticipant.year || '');
-    googleFormData.append('entry.1843043796', primaryParticipant.department || '');
-    googleFormData.append('entry.475120707', primaryParticipant.section || '');
-
-    // Add team name if applicable
-    if (isDebate || isTacticalShowdown || isLogicalLeague) {
-        googleFormData.append('entry.560605564', teamName);
-    }
-    
-    // Add other team members (Google Form has a fixed number of fields, so we cap it)
-    const otherMembers = teamMembers.slice(1);
-    const memberEntries = [
-        // Member 2
-        { name: '1321823957', roll: '1454220941', year: '662259548', dept: '1160076544', sec: '729058130' },
-        // Member 3
-        { name: '315079404', roll: '1704218020', year: '1105480150', dept: '2114217522', sec: '837573074' },
-        // Member 4
-        { name: '795983694', roll: '1655263982', year: '1073877070', dept: '364121594', sec: '1447708165' },
-    ];
-    
-    // For Rangasthalam with > 5 members, we can only submit the first few to the form.
-    // The full list is still captured by our app state.
-    otherMembers.slice(0, memberEntries.length).forEach((member, index) => {
-        const entries = memberEntries[index];
-        if (entries) {
-            googleFormData.append(`entry.${entries.name}`, member.fullName);
-            googleFormData.append(`entry.${entries.roll}`, member.rollNo || '');
-            googleFormData.append(`entry.${entries.year}`, member.year || '');
-            googleFormData.append(`entry.${entries.dept}`, member.department || '');
-            googleFormData.append(`entry.${entries.sec}`, member.section || '');
-        }
+    // Delegate submission to the parent component.
+    onSubmit({
+      selectedPriceTier,
+      teamMembers,
+      teamName: (isDebate || isTacticalShowdown || isLogicalLeague) ? teamName : undefined,
     });
-
-    try {
-      await fetch(googleFormActionURL, { method: 'POST', body: googleFormData, mode: 'no-cors' });
-      setSubmitted(true);
-      // Pass the complete team member list to the app state
-      onSubmit({ selectedPriceTier, teamMembers });
-    } catch (err: any) {
-      console.error('Failed to submit to Google Form:', err);
-      setSubmitError(`An unexpected error occurred: ${err?.message ?? String(err)}`);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const renderMemberFields = (memberData: TeamMember, handler: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, memberNumber: number) => (
@@ -344,10 +292,9 @@ const RegistrationPage: React.FC<RegistrationPageProps> = ({ event, user, onSubm
 
         <div className="text-center">
             <button type="submit" disabled={isSubmitting} className={`w-full max-w-md px-8 py-4 bg-gradient-to-r from-brand-primary to-brand-accent text-white font-bold rounded-lg shadow-lg transition-all duration-300 transform ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-brand-accent/50 hover:scale-105'} focus:outline-none focus:ring-4 focus:ring-brand-accent/50`}>
-              {isSubmitting ? 'Submitting...' : 'Proceed to Payment'}
+              {isSubmitting ? 'Processing Payment...' : 'Proceed to Payment'}
             </button>
             {submitError && <p className="mt-4 text-sm text-red-400 whitespace-pre-wrap">{submitError}</p>}
-            {submitted && <p className="mt-4 text-sm text-green-400">Registration submitted successfully!</p>}
         </div>
       </form>
     </div>

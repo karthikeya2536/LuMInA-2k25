@@ -130,7 +130,9 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
         return () => cancelAnimationFrame(animationFrameId);
     }, [targetDate]);
     
-    const hasTimeLeft = Object.values(timeLeft).some(value => value > 0);
+    // FIX: Add a type check to ensure `value` is a number before comparison.
+    // This resolves a TypeScript error where the compiler infers `value` as `unknown`.
+    const hasTimeLeft = Object.values(timeLeft).some(value => typeof value === 'number' && value > 0);
 
     return (
         <div className="my-12 animate-item-enter" style={{ animationDelay: '400ms' }}>

@@ -15,6 +15,7 @@ import Cursor from './components/Cursor';
 import Footer from './components/Footer';
 import ConfirmationPage from './components/ConfirmationPage';
 import SchedulePage from './components/SchedulePage';
+import Notification, { NotificationType } from './components/Notification';
 
 const AppContent: React.FC = () => {
     const navigate = useNavigate();
@@ -22,6 +23,8 @@ const AppContent: React.FC = () => {
     const [appIsReady, setAppIsReady] = useState<boolean>(false);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [currentUser] = useState<User>(MOCK_USER);
+    const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+    const [notification, setNotification] = useState<{ message: string; type: NotificationType } | null>(null);
     const [registrations, setRegistrations] = useState<Registration[]>(() => {
         try {
             const saved = localStorage.getItem('lumina-fest-registrations');
@@ -42,7 +45,6 @@ const AppContent: React.FC = () => {
         }
         return [];
     });
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -55,6 +57,10 @@ const AppContent: React.FC = () => {
             console.error('Could not save registrations to local storage', e);
         }
     }, [registrations]);
+    
+    const showNotification = (message: string, type: NotificationType) => {
+        setNotification({ message, type });
+    };
 
     if (!appIsReady) {
       return <SplashScreen onFinished={() => setAppIsReady(true)} />;
@@ -96,31 +102,118 @@ const AppContent: React.FC = () => {
         navigate('/register');
     }
 
-    const handleRegistrationSubmit = (registrationData: { selectedPriceTier: string, teamMembers: TeamMember[] }) => {
+    const handleRegistrationSubmit = (registrationData: { selectedPriceTier: string; teamMembers: TeamMember[]; teamName?: string; }) => {
         if (!selectedEvent || !currentUser) return;
-
-        setIsLoading(true);
-
-        // FIX: The `Omit` utility type requires two arguments: the base type and the keys to omit.
-        // Here, we're creating a partial registration object before the payment details (like id, paymentId, paymentStatus) are generated.
-        const newRegistration: Omit<Registration, 'id' | 'paymentId' | 'paymentStatus'> = {
-            event: selectedEvent,
-            participant: currentUser,
-            registrationDate: new Date(),
-            ...registrationData
+    
+        setIsProcessingPayment(true);
+    
+        const amountString = registrationData.selectedPriceTier.split(':').pop()?.trim();
+        const amountInRupees = amountString ? parseInt(amountString, 10) : 0;
+    
+        if (isNaN(amountInRupees) || amountInRupees <= 0) {
+            showNotification("Error: Invalid price for this event.", 'error');
+            setIsProcessingPayment(false);
+            return;
+        }
+    
+        const options = {
+            key: 'rzp_test_ROcO16Cak58YQk',
+            amount: amountInRupees * 100,
+            currency: "INR",
+            name: "LuMInA Fest 2k25",
+            description: `Registration for ${selectedEvent.eventName}`,
+            image: "https://i.imgur.com/gJmB4g2.png",
+            handler: async (response: any) => {
+                const paymentId = response.razorpay_payment_id;
+                showNotification('Payment successful! Saving your registration...', 'success');
+    
+                // --- Submit to Google Forms AFTER successful payment ---
+                const googleFormActionURL = 'https://docs.google.com/forms/d/e/1FAIpQLSejMRTIGWD_tpJOsOC1UWYs3W7-F3vINXZIljI14ZTxUHl3Cg/formResponse';
+                const googleFormData = new FormData();
+                
+                googleFormData.append('entry.1721128365', selectedEvent.eventName);
+                
+                const primaryParticipant = registrationData.teamMembers[0];
+                googleFormData.append('entry.1994438372', primaryParticipant.fullName);
+                googleFormData.append('entry.632548788', primaryParticipant.phoneNumber || '');
+                googleFormData.append('entry.1235040660', primaryParticipant.rollNo);
+                googleFormData.append('entry.1457360595', primaryParticipant.year || '');
+                googleFormData.append('entry.1843043796', primaryParticipant.department || '');
+                googleFormData.append('entry.475120707', primaryParticipant.section || '');
+        
+                if (registrationData.teamName) {
+                    googleFormData.append('entry.560605564', registrationData.teamName);
+                }
+                
+                const otherMembers = registrationData.teamMembers.slice(1);
+                const memberEntries = [
+                    { name: '1321823957', roll: '1454220941', year: '662259548', dept: '1160076544', sec: '729058130' },
+                    { name: '315079404', roll: '1704218020', year: '1105480150', dept: '2114217522', sec: '837573074' },
+                    { name: '795983694', roll: '1655263982', year: '1073877070', dept: '364121594', sec: '1447708165' },
+                ];
+                
+                otherMembers.slice(0, memberEntries.length).forEach((member, index) => {
+                    const entries = memberEntries[index];
+                    if (entries) {
+                        googleFormData.append(`entry.${entries.name}`, member.fullName);
+                        googleFormData.append(`entry.${entries.roll}`, member.rollNo || '');
+                        googleFormData.append(`entry.${entries.year}`, member.year || '');
+                        googleFormData.append(`entry.${entries.dept}`, member.department || '');
+                        googleFormData.append(`entry.${entries.sec}`, member.section || '');
+                    }
+                });
+    
+                try {
+                    await fetch(googleFormActionURL, { method: 'POST', body: googleFormData, mode: 'no-cors' });
+                    
+                    // --- Create final registration record ---
+                    const finalRegistration: Registration = {
+                        ...registrationData,
+                        event: selectedEvent,
+                        participant: currentUser,
+                        registrationDate: new Date(),
+                        id: `reg_${Date.now()}`,
+                        paymentStatus: 'Paid',
+                        paymentId: paymentId,
+                    };
+                    setRegistrations(prev => [...prev, finalRegistration]);
+                    navigate('/confirmation', { state: { registration: finalRegistration } });
+    
+                } catch (error) {
+                    console.error("Google Form submission failed AFTER payment:", error);
+                    showNotification(`Payment Succeeded (ID: ${paymentId}), but registration failed. Please contact support.`, 'error');
+                } finally {
+                    setIsProcessingPayment(false);
+                }
+            },
+            prefill: {
+                name: registrationData.teamMembers[0]?.fullName || currentUser.fullName,
+                email: currentUser.email,
+                contact: registrationData.teamMembers[0]?.phoneNumber || currentUser.phoneNumber,
+            },
+            notes: {
+                event_id: selectedEvent.id,
+                user_id: currentUser.id,
+            },
+            theme: {
+                color: "#DAA520"
+            },
+            modal: {
+                ondismiss: () => {
+                    showNotification("Payment was cancelled.", 'info');
+                    setIsProcessingPayment(false);
+                }
+            }
         };
-
-        setTimeout(() => {
-            const finalRegistration: Registration = {
-                ...newRegistration,
-                id: `reg_${Date.now()}`,
-                paymentStatus: 'Paid',
-                paymentId: `pi_${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
-            };
-            setRegistrations(prev => [...prev, finalRegistration]);
-            setIsLoading(false);
-            navigate('/confirmation', { state: { registration: finalRegistration } });
-        }, 3000);
+    
+        try {
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error("Error initializing Razorpay:", error);
+            showNotification("Could not open payment window. Please try again.", 'error');
+            setIsProcessingPayment(false);
+        }
     };
 
     const EventDetailsWrapper = () => {
@@ -129,10 +222,7 @@ const AppContent: React.FC = () => {
 
         const eventFromUrl = MOCK_EVENTS.find(e => e.id.toString() === eventId);
         
-        // On direct load/reload, selectedEvent is null. This is the primary guard.
-        // Also protects against out-of-sync state (e.g., using browser back/forward) and invalid event IDs.
         if (!selectedEvent || !eventFromUrl || selectedEvent.id !== eventFromUrl.id) {
-            // Use declarative redirect for cleaner and more reliable navigation on direct page loads.
             return <Navigate to="/" replace />;
         }
 
@@ -141,18 +231,19 @@ const AppContent: React.FC = () => {
     
     return (
         <>
+            {notification && (
+              <Notification
+                  message={notification.message}
+                  type={notification.type}
+                  onClose={() => setNotification(null)}
+              />
+            )}
             <div className="min-h-screen">
                 <Cursor />
                 <ParticleBackground />
                 <div className="relative z-10 flex flex-col min-h-screen">
                     <Header onNavigate={handleNavigation} />
-                    {isLoading && (
-                        <div className="fixed inset-0 bg-brand-bg/80 backdrop-blur-sm flex flex-col items-center justify-center z-[80]">
-                            <div className="w-16 h-16 border-4 border-t-brand-accent border-r-brand-accent border-brand-secondary rounded-full animate-spin"></div>
-                            <p className="mt-4 text-xl text-white">Processing Payment...</p>
-                        </div>
-                    )}
-
+                    
                     <main className="flex-grow">
                         <Routes>
                             <Route path="/" element={<HomePage onNavigateToEvents={handleNavigateToEvents} />} />
@@ -161,7 +252,7 @@ const AppContent: React.FC = () => {
                             <Route path="/gallery" element={<GalleryPage onBack={() => navigate(-1)} />} />
                             <Route path="/contact" element={<ContactPage onBack={() => navigate(-1)} />} />
                             <Route path="/event/:eventId" element={<EventDetailsWrapper />} />
-                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} /> : <Navigate to="/" replace />} />
+                            <Route path="/register" element={selectedEvent && currentUser ? <RegistrationPage event={selectedEvent} user={currentUser} onSubmit={handleRegistrationSubmit} onBack={() => navigate(-1)} isSubmitting={isProcessingPayment} /> : <Navigate to="/" replace />} />
                             <Route path="/confirmation" element={<ConfirmationPage onNavigateToEvents={handleNavigateToEvents} onNavigateHome={() => navigate('/')} />} />
                         </Routes>
                     </main>
